@@ -1,0 +1,306 @@
+sites:
+  - id: sderot
+    name: Sderot
+    lat: 31.5253
+    lon: 34.5951
+    devices:
+      - id: sderot-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 1.1.1.1
+        ping:
+          timeoutMs: 3000
+      - id: sderot-cctv-1
+        name: Perimeter Camera 1
+        type: camera
+        method: mock
+        target: 192.0.2.10
+      - id: sderot-weather-api
+        name: Weather Station
+        type: sensor
+        method: mock
+        target: https://api.example.com/stations/sderot/status
+      - id: sderot-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: mock
+        target: 192.0.2.11
+      - id: sderot-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.12
+      - id: sderot-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.13
+  - id: netivot
+    name: Netivot
+    lat: 31.4231
+    lon: 34.5892
+    devices:
+      - id: netivot-core-rtr
+        name: Core Router
+        type: router
+        method: mock
+        target: 192.0.2.2
+      - id: netivot-ups
+        name: Site UPS
+        type: power
+        method: mock
+        target: 192.0.2.20
+      - id: netivot-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: mock
+        target: 192.0.2.21
+      - id: netivot-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: api
+        target: https://api.github.com/zen
+        api:
+          method: GET
+          expectedStatus: 200
+          timeoutMs: 5000
+  - id: kfar-aza
+    name: Kfar Aza
+    lat: 31.4906
+    lon: 34.5347
+    devices:
+      - id: kfaraza-gateway
+        name: Site Gateway
+        type: router
+        method: ping
+        target: 8.8.8.8
+      - id: kfaraza-cctv-1
+        name: Perimeter Camera
+        type: camera
+        method: mock
+        target: 192.0.2.30
+      - id: kfaraza-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.31
+      - id: kfaraza-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: mock
+        target: 192.0.2.32
+  - id: nahal-oz
+    name: Nahal Oz
+    lat: 31.461
+    lon: 34.509
+    devices:
+      - id: nahaloz-gateway
+        name: Site Gateway
+        type: router
+        method: mock
+        target: 192.0.2.4
+      - id: nahaloz-sensor-api
+        name: Perimeter Sensor
+        type: sensor
+        method: api
+        target: https://api.github.com
+        api:
+          method: GET
+          expectedStatus: 200
+          timeoutMs: 5000
+      - id: nahaloz-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.41
+      - id: nahaloz-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.42
+  - id: kerem-shalom
+    name: Kerem Shalom
+    lat: 31.2167
+    lon: 34.2833
+    devices:
+      - id: keremshalom-crossing-rtr
+        name: Crossing Router
+        type: router
+        method: ping
+        target: 1.0.0.1
+      - id: keremshalom-ups
+        name: Site UPS
+        type: power
+        method: mock
+        target: 192.0.2.50
+      - id: keremshalom-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: ping
+        target: 8.8.4.4
+      - id: keremshalom-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.51
+  - id: nir-oz
+    name: Nir Oz
+    lat: 31.3907
+    lon: 34.4103
+    devices:
+      - id: niroz-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 1.1.1.1
+      - id: niroz-camera-1
+        name: Perimeter Camera 1
+        type: camera
+        method: mock
+        target: 192.0.2.80
+      - id: niroz-sensor-1
+        name: Perimeter Sensor
+        type: sensor
+        method: mock
+        target: 192.0.2.81
+  - id: kissufim
+    name: Kissufim
+    lat: 31.3773
+    lon: 34.3711
+    devices:
+      - id: kissufim-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 8.8.8.8
+      - id: kissufim-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: mock
+        target: 192.0.2.82
+      - id: kissufim-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.83
+  - id: beeri
+    name: Be'eri
+    lat: 31.4497
+    lon: 34.4956
+    devices:
+      - id: beeri-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 1.0.0.1
+      - id: beeri-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.84
+      - id: beeri-camera-1
+        name: Perimeter Camera 1
+        type: camera
+        method: mock
+        target: 192.0.2.85
+  - id: erez
+    name: Erez
+    lat: 31.545
+    lon: 34.533
+    devices:
+      - id: erez-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 8.8.4.4
+      - id: erez-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: mock
+        target: 192.0.2.86
+      - id: erez-sensor-1
+        name: Perimeter Sensor
+        type: sensor
+        method: mock
+        target: 192.0.2.87
+  - id: netiv-haasara
+    name: Netiv HaAsara
+    lat: 31.5744
+    lon: 34.5219
+    devices:
+      - id: netivhaasara-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 9.9.9.9
+      - id: netivhaasara-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.88
+      - id: netivhaasara-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.89
+  - id: saad
+    name: Sa'ad
+    lat: 31.4256
+    lon: 34.4794
+    devices:
+      - id: saad-core-rtr
+        name: Core Router
+        type: router
+        method: ping
+        target: 149.112.112.112
+      - id: saad-camera-1
+        name: Perimeter Camera 1
+        type: camera
+        method: mock
+        target: 192.0.2.90
+      - id: saad-power-1
+        name: Site UPS
+        type: power
+        method: mock
+        target: 192.0.2.91
+  - id: comms-site-north
+    name: Communications Site North
+    lat: 31.53
+    lon: 34.665
+    devices:
+      - id: commsnorth-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.61
+      - id: commsnorth-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.62
+      - id: commsnorth-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: ping
+        target: 9.9.9.9
+  - id: comms-site-south
+    name: Communications Site South
+    lat: 31.26
+    lon: 34.353
+    devices:
+      - id: commssouth-roip-1
+        name: ROIP Gateway
+        type: roip
+        method: mock
+        target: 192.0.2.71
+      - id: commssouth-cellular-1
+        name: Cellular Base Station
+        type: cellular-bts
+        method: mock
+        target: 192.0.2.72
+      - id: commssouth-ptz-1
+        name: PTZ Camera 1
+        type: ptz-camera
+        method: ping
+        target: 149.112.112.112
