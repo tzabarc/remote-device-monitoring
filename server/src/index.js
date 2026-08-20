@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import http from "http";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import { Server } from "socket.io";
 
 import { getConfig, loadConfig, saveConfig, watchConfig } from "./config/configLoader.js";
@@ -145,6 +148,18 @@ io.on("connection", (socket) => {
 watchConfig((config) => {
   io.emit("sites", config.sites);
 });
+
+// In production, serve the built client so this single process handles
+// both the API/WebSocket and the web UI. In dev, the client runs
+// separately under Vite (see README), and client/dist won't exist yet.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CLIENT_DIST = path.join(__dirname, "../../client/dist");
+if (fs.existsSync(CLIENT_DIST)) {
+  app.use(express.static(CLIENT_DIST));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(CLIENT_DIST, "index.html"));
+  });
+}
 
 poller.start();
 mockEvents.start();

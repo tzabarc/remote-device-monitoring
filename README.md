@@ -93,6 +93,40 @@ clients without a restart.
 - `DELETE /api/sites/:siteId/devices/:deviceId` — delete a device
 - WebSocket events: `sites`, `status:full`
 
+## Deploying
+
+This is a single Node process: in production it builds the React client
+and serves it (plus the API and WebSocket) from the same Express server,
+so it deploys as one service — no separate static host needed.
+
+```bash
+npm install
+npm run build   # builds client/dist
+npm start        # serves the API, WebSocket, and built client on $PORT
+```
+
+**Render** (recommended — free tier, no card required, handles
+WebSockets): this repo includes a `render.yaml` blueprint.
+
+1. Push your fork/clone to GitHub (already done if you're reading this
+   from the repo).
+2. On [render.com](https://render.com), sign in with GitHub, then
+   **New → Blueprint**, pick this repo. Render reads `render.yaml` and
+   sets the build/start commands automatically.
+3. Deploy. Render gives you a public `https://<name>.onrender.com` URL.
+
+No environment variables are required (`PORT` is set automatically by
+Render). Optional overrides: `POLL_INTERVAL_MS`, `MOCK_EVENT_MIN_MS`,
+`MOCK_EVENT_MAX_MS` (see `server/src/index.js`).
+
+**Note**: the free Render tier spins the service down after ~15 minutes
+of inactivity and takes a few seconds to wake back up on the next
+request — fine for a demo, not for a real monitoring deployment.
+
+Any other platform that runs a persistent Node process with WebSocket
+support works too (Railway, Fly.io, a VPS, etc.) — just run the same
+`npm install && npm run build && npm start`.
+
 ## Status logic
 
 - A device is `up`, `down`, or `unknown` (unrecognized method / no check
