@@ -371,15 +371,6 @@ export default function App() {
           >
             {theme === "dark" ? "☀️" : "🌙"}
           </button>
-          <button
-            className="btn-manage"
-            onClick={() => {
-              setAdminOpen((v) => !v);
-              setLocationPicker(null);
-            }}
-          >
-            {adminOpen ? "Close manage" : "Manage"}
-          </button>
           <button className="btn-reports" onClick={() => setReportsOpen(true)} title="Reports" aria-label="Reports">
             📊
           </button>
@@ -393,6 +384,15 @@ export default function App() {
             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
             ⛶
+          </button>
+          <button
+            className="btn-manage"
+            onClick={() => {
+              setAdminOpen((v) => !v);
+              setLocationPicker(null);
+            }}
+          >
+            {adminOpen ? "Close manage" : "Manage"}
           </button>
         </div>
       </header>
