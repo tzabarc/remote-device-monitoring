@@ -81,6 +81,11 @@ export default function App() {
   }, [muted]);
 
   const markAllNotificationsRead = useCallback(() => {
+    try {
+      localStorage.setItem("markAllReadAt", new Date().toISOString());
+    } catch {
+      // localStorage unavailable (e.g. private browsing) — read state still updates this session.
+    }
     setNotifications((cur) => cur.map((n) => ({ ...n, read: true })));
   }, []);
 
@@ -176,7 +181,18 @@ export default function App() {
     // broadcast to all tabs identically, instead of each tab guessing at
     // history by diffing its own status snapshots.
     const onEventsRecent = (events) => {
-      setNotifications(events.slice().reverse().map((e) => ({ ...e, read: true })));
+      let markAllReadAt = null;
+      try {
+        markAllReadAt = localStorage.getItem("markAllReadAt");
+      } catch {
+        // localStorage unavailable — treat as if "mark all read" was never used.
+      }
+      setNotifications(
+        events
+          .slice()
+          .reverse()
+          .map((e) => ({ ...e, read: markAllReadAt ? e.at <= markAllReadAt : true }))
+      );
     };
 
     const onEventNew = (event) => {
