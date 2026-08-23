@@ -30,6 +30,7 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [locationPicker, setLocationPicker] = useState(null); // (lat, lon) => void, or null
   const [canUndo, setCanUndo] = useState(false);
   const [undoBusy, setUndoBusy] = useState(false);
@@ -146,6 +147,25 @@ export default function App() {
       }
       return next;
     });
+  }
+
+  // Fullscreen can also be exited via Escape or the browser's own UI, not
+  // just our button, so track real state via the event rather than a
+  // simple toggle flag.
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch((err) => {
+        console.error("Failed to enter fullscreen:", err.message);
+      });
+    } else {
+      document.exitFullscreen?.();
+    }
   }
 
   useEffect(() => {
@@ -322,6 +342,14 @@ export default function App() {
           </button>
           <button className="btn-about" onClick={() => setAboutOpen(true)} title="About" aria-label="About">
             ℹ️
+          </button>
+          <button
+            className="btn-fullscreen"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            ⛶
           </button>
         </div>
       </header>
