@@ -207,27 +207,31 @@ export default function MapView({
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Map (Hebrew labels)">
+          {/*
+            Wikimedia's own OSM-intl tiles (previously used here for a
+            Hebrew-forced label layer) now hard-block non-Wikimedia sites
+            ("Map tiles are restricted to Wikimedia and affiliated sites
+            only") — every request 403s, which is why both the base layer
+            and the label overlay went blank. Switched to CARTO's free,
+            no-API-key basemap tiles. CARTO doesn't support forcing a
+            specific label language the way the old Wikimedia layer did,
+            so labels follow OSM's default local name — in practice Hebrew
+            for these Israeli towns, since that's their primary OSM name.
+          */}
+          <LayersControl.BaseLayer name="Map">
             <TileLayer
-              attribution='Map: <a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=he"
+              attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
-          {/*
-            Esri's "World_Boundaries_and_Places" overlay was tried here for
-            satellite place labels, but it renders local-language labels
-            (including non-Hebrew scripts for some localities) with no way
-            to force Hebrew via the free REST tile API. Using the same
-            Hebrew-forced Wikimedia layer as a semi-transparent overlay
-            instead, so satellite imagery still shows through underneath.
-          */}
-          <LayersControl.Overlay checked name="Place labels (Hebrew)">
+          <LayersControl.Overlay checked name="Place labels">
             <TileLayer
-              attribution='Map: <a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png?lang=he"
+              attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
               maxZoom={19}
-              opacity={0.55}
             />
           </LayersControl.Overlay>
         </LayersControl>
