@@ -5,6 +5,7 @@ import { TYPE_ICONS, formatIsraelDateTime } from "../format.js";
 const PRESETS = [
   { key: "1h", label: "1h", hours: 1 },
   { key: "6h", label: "6h", hours: 6 },
+  { key: "12h", label: "12h", hours: 12 },
   { key: "24h", label: "24h", hours: 24 },
   { key: "7d", label: "7d", hours: 24 * 7 },
   { key: "30d", label: "30d", hours: 24 * 30 },
