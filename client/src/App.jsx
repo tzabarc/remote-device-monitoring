@@ -191,7 +191,7 @@ export default function App() {
         events
           .slice()
           .reverse()
-          .map((e) => ({ ...e, read: markAllReadAt ? e.at <= markAllReadAt : true }))
+          .map((e) => ({ ...e, read: markAllReadAt ? e.at <= markAllReadAt : false }))
       );
     };
 
