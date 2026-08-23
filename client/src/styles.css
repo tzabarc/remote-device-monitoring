@@ -254,7 +254,7 @@ body {
   transform: translate(-50%, -50%) scale(1);
   opacity: 0.9;
   pointer-events: none;
-  animation: site-pulse 1s ease-out 5;
+  animation: site-pulse 1s ease-out 8;
 }
 @keyframes site-pulse {
   from {

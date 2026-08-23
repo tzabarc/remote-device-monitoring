@@ -11,7 +11,7 @@ import * as api from "./api.js";
 import { playUpSound, playDownSound, unlockAudio } from "./sound.js";
 import { displayMethod } from "./format.js";
 
-const PULSE_DURATION_MS = 5000;
+const PULSE_DURATION_MS = 8000;
 
 function deviceStatus(statuses, deviceId) {
   return statuses[deviceId]?.status || "unknown";
