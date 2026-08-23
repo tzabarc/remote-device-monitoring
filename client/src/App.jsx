@@ -40,6 +40,15 @@ export default function App() {
       return false;
     }
   });
+  const [theme, setTheme] = useState(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored === "light" || stored === "dark") return stored;
+    } catch {
+      // localStorage unavailable — fall through to system preference.
+    }
+    return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  });
 
   const [pulsingSites, setPulsingSites] = useState(() => new Set());
 
@@ -116,6 +125,22 @@ export default function App() {
         localStorage.setItem("soundMuted", next ? "1" : "0");
       } catch {
         // localStorage unavailable (e.g. private browsing) — mute still works this session.
+      }
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((cur) => {
+      const next = cur === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem("theme", next);
+      } catch {
+        // localStorage unavailable (e.g. private browsing) — theme still works this session.
       }
       return next;
     });
@@ -275,6 +300,14 @@ export default function App() {
             aria-label={muted ? "Unmute" : "Mute"}
           >
             {muted ? "🔇" : "🔊"}
+          </button>
+          <button
+            className="btn-theme"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
           </button>
           <button
             className="btn-manage"
