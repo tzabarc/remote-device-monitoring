@@ -276,6 +276,41 @@ export default function App() {
     setTypeFilter(new Set());
   }
 
+  // A device that was already down before this tab connected (e.g. after a
+  // page refresh) never has its down transition observed by onStatusFull,
+  // so it would otherwise be missing from the log entirely — including
+  // "Unresolved" mode — even though it's actively down right now. Synthesize
+  // a stand-in entry for any such device so the log always reflects live state.
+  const notificationsForLog = useMemo(() => {
+    const latestByDevice = new Map();
+    for (const n of notifications) {
+      if (n.deviceId && !latestByDevice.has(n.deviceId)) latestByDevice.set(n.deviceId, n);
+    }
+    const ghosts = [];
+    for (const [deviceId, s] of Object.entries(statuses)) {
+      if (s.status !== "down") continue;
+      const latest = latestByDevice.get(deviceId);
+      if (latest && latest.to === "down") continue;
+      const info = deviceIndex[deviceId];
+      if (!info) continue;
+      ghosts.push({
+        id: `ghost-${deviceId}`,
+        deviceId,
+        deviceName: info.deviceName,
+        siteName: info.siteName,
+        deviceType: info.deviceType,
+        siteId: info.siteId,
+        method: info.method,
+        from: latest?.to,
+        to: "down",
+        checkedAt: s.checkedAt,
+        read: true,
+      });
+    }
+    if (ghosts.length === 0) return notifications;
+    return [...notifications, ...ghosts].sort((a, b) => (a.checkedAt < b.checkedAt ? 1 : -1));
+  }, [notifications, statuses, deviceIndex]);
+
   const selectedSite = sitesWithStatus.find((s) => s.id === selectedSiteId) || null;
   const selectedSiteFiltered = filteredSites.find((s) => s.id === selectedSiteId) || null;
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -306,7 +341,7 @@ export default function App() {
   return (
     <div className="app" data-mobile-tab={mobileTab}>
       <ActivityLog
-        notifications={notifications}
+        notifications={notificationsForLog}
         statuses={statuses}
         typeFilter={typeFilter}
         onMarkAllRead={markAllNotificationsRead}
