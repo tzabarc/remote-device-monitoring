@@ -6,7 +6,7 @@ import { recordEvent } from "./eventLog.js";
 
 const checkers = { ping: checkPing, snmp: checkSnmp, api: checkApi, mock: checkMock };
 
-export function createPoller({ getConfig, store, intervalMs, onUpdate }) {
+export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent }) {
   let timer = null;
   let inFlight = false;
 
@@ -45,13 +45,14 @@ export function createPoller({ getConfig, store, intervalMs, onUpdate }) {
 
           const hasRealPrevious = previous.status === "up" || previous.status === "down";
           if (hasRealPrevious && previous.status !== result.status) {
-            recordEvent({
+            const event = recordEvent({
               deviceId: device.id,
               siteId: device.siteId,
               from: previous.status,
               to: result.status,
               at: checkedAt,
             });
+            onEvent?.(event);
           }
         })
       );

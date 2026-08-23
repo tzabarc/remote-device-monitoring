@@ -34,7 +34,7 @@ function pickChangeEvent(devices, store) {
   return { device, target: current === "up" ? "down" : "up" };
 }
 
-export function createMockEventScheduler({ getConfig, store, onUpdate, minMs = 4000, maxMs = 50000 }) {
+export function createMockEventScheduler({ getConfig, store, onUpdate, onEvent, minMs = 4000, maxMs = 50000 }) {
   let timer = null;
 
   function triggerOne() {
@@ -54,7 +54,8 @@ export function createMockEventScheduler({ getConfig, store, onUpdate, minMs = 4
     });
 
     if ((previousStatus === "up" || previousStatus === "down") && previousStatus !== target) {
-      recordEvent({ deviceId: device.id, siteId: device.siteId, from: previousStatus, to: target, at: now });
+      const event = recordEvent({ deviceId: device.id, siteId: device.siteId, from: previousStatus, to: target, at: now });
+      onEvent?.(event);
     }
 
     onUpdate?.(store.getAll());

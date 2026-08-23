@@ -12,6 +12,7 @@ import { createPoller } from "./lib/poller.js";
 import { createMockEventScheduler } from "./lib/mockEventScheduler.js";
 import { addSite, updateSite, deleteSite, addDevice, updateDevice, deleteDevice } from "./config/configService.js";
 import { buildReport } from "./lib/report.js";
+import { recentEvents } from "./lib/eventLog.js";
 
 const PORT = process.env.PORT || 4000;
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || 15000);
@@ -32,12 +33,14 @@ const poller = createPoller({
   store,
   intervalMs: POLL_INTERVAL_MS,
   onUpdate: (all) => io.emit("status:full", all),
+  onEvent: (event) => io.emit("event:new", event),
 });
 
 const mockEvents = createMockEventScheduler({
   getConfig,
   store,
   onUpdate: (all) => io.emit("status:full", all),
+  onEvent: (event) => io.emit("event:new", event),
   minMs: MOCK_EVENT_MIN_MS,
   maxMs: MOCK_EVENT_MAX_MS,
 });
@@ -157,6 +160,7 @@ io.on("connection", (socket) => {
   socket.emit("sites", getConfig().sites);
   socket.emit("status:full", store.getAll());
   socket.emit("undo:available", history.length > 0);
+  socket.emit("events:recent", recentEvents(50));
 });
 
 watchConfig((config) => {

@@ -75,15 +75,6 @@ export default function App() {
     return idx;
   }, [sites]);
 
-  // Refs so the socket handlers (registered once, below) always see the
-  // latest values without re-subscribing on every sites/status change.
-  const deviceIndexRef = useRef(deviceIndex);
-  useEffect(() => {
-    deviceIndexRef.current = deviceIndex;
-  }, [deviceIndex]);
-
-  const prevStatusesRef = useRef(null); // null until the first snapshot loads
-
   const mutedRef = useRef(muted);
   useEffect(() => {
     mutedRef.current = muted;
@@ -174,68 +165,45 @@ export default function App() {
 
   useEffect(() => {
     fetch("/api/sites").then((r) => r.json()).then(setSites);
-    fetch("/api/status")
-      .then((r) => r.json())
-      .then((initial) => {
-        prevStatusesRef.current = initial;
-        setStatuses(initial);
-      });
+    fetch("/api/status").then((r) => r.json()).then(setStatuses);
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
 
-    const onStatusFull = (newStatuses) => {
-      const prev = prevStatusesRef.current;
-      if (prev) {
-        const changes = [];
-        for (const [deviceId, s] of Object.entries(newStatuses)) {
-          const prevStatus = prev[deviceId]?.status;
-          if (prevStatus && prevStatus !== s.status) {
-            const info = deviceIndexRef.current[deviceId] || {};
-            changes.push({
-              id: `${deviceId}-${s.checkedAt}`,
-              deviceId,
-              deviceName: info.deviceName || deviceId,
-              siteName: info.siteName || "",
-              deviceType: info.deviceType,
-              siteId: info.siteId,
-              method: info.method,
-              from: prevStatus,
-              to: s.status,
-              checkedAt: s.checkedAt,
-              read: false,
-            });
-          }
-        }
-        if (changes.length > 0) {
-          setNotifications((cur) => [...changes, ...cur].slice(0, 50));
-          for (const siteId of new Set(changes.map((c) => c.siteId).filter(Boolean))) {
-            pulseSite(siteId);
-          }
-          if (!mutedRef.current) {
-            const hasDown = changes.some((c) => c.to === "down");
-            const hasUp = changes.some((c) => c.to === "up");
-            if (hasDown) playDownSound();
-            if (hasUp) playUpSound(hasDown ? 0.5 : 0);
-          }
-        }
+    // The server is the source of truth for event history — every tab
+    // starts from the same "recent events" snapshot on connect (so a
+    // freshly opened tab isn't blank), and every subsequent event is
+    // broadcast to all tabs identically, instead of each tab guessing at
+    // history by diffing its own status snapshots.
+    const onEventsRecent = (events) => {
+      setNotifications(events.slice().reverse().map((e) => ({ ...e, read: true })));
+    };
+
+    const onEventNew = (event) => {
+      setNotifications((cur) => [{ ...event, read: false }, ...cur].slice(0, 50));
+      if (event.siteId) pulseSite(event.siteId);
+      if (!mutedRef.current) {
+        if (event.to === "down") playDownSound();
+        else if (event.to === "up") playUpSound();
       }
-      prevStatusesRef.current = newStatuses;
-      setStatuses(newStatuses);
     };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("sites", setSites);
-    socket.on("status:full", onStatusFull);
+    socket.on("status:full", setStatuses);
     socket.on("undo:available", setCanUndo);
+    socket.on("events:recent", onEventsRecent);
+    socket.on("event:new", onEventNew);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("sites", setSites);
-      socket.off("status:full", onStatusFull);
+      socket.off("status:full", setStatuses);
       socket.off("undo:available", setCanUndo);
+      socket.off("events:recent", onEventsRecent);
+      socket.off("event:new", onEventNew);
     };
   }, []);
 
@@ -278,14 +246,38 @@ export default function App() {
     setTypeFilter(new Set());
   }
 
-  // A device that was already down before this tab connected (e.g. after a
-  // page refresh) never has its down transition observed by onStatusFull,
-  // so it would otherwise be missing from the log entirely — including
-  // "Unresolved" mode — even though it's actively down right now. Synthesize
-  // a stand-in entry for any such device so the log always reflects live state.
+  // Notifications from the server carry only ids (deviceId/siteId); resolve
+  // display info from the current inventory at render time rather than
+  // baking it in on receipt, so it's correct regardless of whether `sites`
+  // has loaded yet by the time an event arrives.
+  const enrichedNotifications = useMemo(() => {
+    return notifications.map((n) => {
+      const info = deviceIndex[n.deviceId] || {};
+      return {
+        id: n.id,
+        deviceId: n.deviceId,
+        siteId: n.siteId || info.siteId,
+        deviceName: info.deviceName || n.deviceId,
+        siteName: info.siteName || "",
+        deviceType: info.deviceType,
+        method: info.method,
+        from: n.from,
+        to: n.to,
+        checkedAt: n.at,
+        read: n.read,
+      };
+    });
+  }, [notifications, deviceIndex]);
+
+  // A device that was already down before the event log's most-recent-50
+  // window (e.g. it's been down for a long time and churn pushed its
+  // original down-event out) has no matching entry, so it would otherwise
+  // be missing from the log entirely — including "Unresolved" mode — even
+  // though it's actively down right now. Synthesize a stand-in entry for
+  // any such device so the log always reflects live state.
   const notificationsForLog = useMemo(() => {
     const latestByDevice = new Map();
-    for (const n of notifications) {
+    for (const n of enrichedNotifications) {
       if (n.deviceId && !latestByDevice.has(n.deviceId)) latestByDevice.set(n.deviceId, n);
     }
     const ghosts = [];
@@ -309,9 +301,9 @@ export default function App() {
         read: true,
       });
     }
-    if (ghosts.length === 0) return notifications;
-    return [...notifications, ...ghosts].sort((a, b) => (a.checkedAt < b.checkedAt ? 1 : -1));
-  }, [notifications, statuses, deviceIndex]);
+    if (ghosts.length === 0) return enrichedNotifications;
+    return [...enrichedNotifications, ...ghosts].sort((a, b) => (a.checkedAt < b.checkedAt ? 1 : -1));
+  }, [enrichedNotifications, statuses, deviceIndex]);
 
   const selectedSite = sitesWithStatus.find((s) => s.id === selectedSiteId) || null;
   const selectedSiteFiltered = filteredSites.find((s) => s.id === selectedSiteId) || null;

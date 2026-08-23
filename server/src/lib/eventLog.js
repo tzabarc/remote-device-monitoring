@@ -39,11 +39,23 @@ load();
 // Only call this for a *real* observed transition (previous status was
 // definitively "up" or "down", not the initial "unknown" placeholder) —
 // callers are responsible for that check so a device's very first-ever
-// check doesn't get logged as a spurious "unknown -> up" event.
+// check doesn't get logged as a spurious "unknown -> up" event. Returns
+// the stored event so the caller can broadcast it to connected clients —
+// the event log is the single source of truth for "what happened", and
+// every client (current tabs via broadcast, new tabs via recentEvents)
+// sees the exact same data instead of each reconstructing its own view
+// from status snapshots.
 export function recordEvent({ deviceId, siteId, from, to, at }) {
-  events.push({ id: `${at}-${deviceId}-${seq++}`, deviceId, siteId, from, to, at });
+  const event = { id: `${at}-${deviceId}-${seq++}`, deviceId, siteId, from, to, at };
+  events.push(event);
   if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
   scheduleSave();
+  return event;
+}
+
+// The most recent `limit` events, oldest first (same order as queryEvents).
+export function recentEvents(limit = 50) {
+  return events.slice(-limit);
 }
 
 export function queryEvents({ deviceIds, siteIds, from, to } = {}) {
