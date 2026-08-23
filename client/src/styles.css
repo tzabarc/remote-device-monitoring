@@ -135,6 +135,7 @@ body {
 .btn-undo,
 .btn-mute,
 .btn-theme,
+.btn-reports,
 .btn-about,
 .btn-fullscreen {
   background: var(--bg-hover);
@@ -149,6 +150,7 @@ body {
 .btn-undo:hover:not(:disabled),
 .btn-mute:hover,
 .btn-theme:hover,
+.btn-reports:hover,
 .btn-about:hover,
 .btn-fullscreen:hover {
   background: var(--border-subtle);
@@ -1437,6 +1439,7 @@ body {
   .btn-undo,
   .btn-mute,
   .btn-theme,
+  .btn-reports,
   .btn-about,
   .btn-fullscreen,
   .btn-manage {
