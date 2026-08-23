@@ -1,7 +1,7 @@
 import React from "react";
 
 const APP_NAME = "Tzabtor";
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "2.0.0";
 const APP_AUTHOR = "Tzabar Cohen";
 
 export default function AboutModal({ onClose }) {

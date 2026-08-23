@@ -1,16 +1,38 @@
 # Tzabtor
 
-A small NOC-style dashboard: it monitors devices across several sites (via
-ping, SNMP, or HTTP API checks) and shows them on a map, color-coded by
-status, with a live-updating device list per site.
+A NOC-style dashboard: it monitors devices across several sites (via ping,
+SNMP, or HTTP API checks), shows them on a satellite map color-coded by
+status, keeps a live activity log of status changes, and can generate
+visual uptime reports over any time frame and device/site selection.
+
+**Live demo**: https://remote-device-monitoring.onrender.com (free-tier
+instance — may take a few seconds to wake up if idle).
+
+## Features
+
+- **Live map** — satellite imagery with Hebrew place labels, sites
+  color-coded by worst device status, pulse animation on status changes,
+  hover card listing a site's devices.
+- **Activity log** — a running log of status changes with All/Unread/
+  Unresolved modes, still-down devices pinned to the top, sounds (mutable)
+  for up/down events, and per-row read tracking.
+- **Reports** — pick any combination of sites/devices and a time frame
+  (presets or custom range) to get summary stats, an event-volume chart,
+  per-device uptime timelines, and a filterable/exportable events table.
+- **Manage mode** — add/edit/delete sites and devices from the UI, with
+  undo for the last 20 changes.
+- **Dark/light theme**, **fullscreen**, and a **mobile view** with a
+  Map/Sites/Events tab bar.
 
 ## Stack
 
 - **Server**: Node.js + Express + Socket.IO. A background poller runs every
   `POLL_INTERVAL_MS` (default 15s), checks every device, stores the latest
   result in memory, and pushes updates to connected browsers over
-  WebSockets.
-- **Client**: React + Vite + react-leaflet (OpenStreetMap tiles).
+  WebSockets. Every real status transition is also appended to a small
+  persisted event log (`server/data/events.json`) that powers Reports.
+- **Client**: React + Vite + react-leaflet (Esri satellite tiles + Hebrew
+  label overlay).
 - **Inventory**: a single YAML file (`server/src/config/sites.yaml`) — no
   database. Edit it and the server hot-reloads it automatically.
 
@@ -91,7 +113,11 @@ clients without a restart.
 - `POST /api/sites/:siteId/devices` — add a device `{ name, type, method, target, ping|snmp|api }`
 - `PUT /api/sites/:siteId/devices/:deviceId` — update a device
 - `DELETE /api/sites/:siteId/devices/:deviceId` — delete a device
-- WebSocket events: `sites`, `status:full`
+- `GET /api/report?siteIds=&deviceIds=&from=&to=` — report for the given
+  filters (comma-separated ids, ISO timestamps; all optional): summary
+  stats, per-device uptime timelines, and the matching events
+- `POST /api/undo` — revert the last config change
+- WebSocket events: `sites`, `status:full`, `undo:available`
 
 ## Deploying
 
@@ -140,8 +166,10 @@ support works too (Railway, Fly.io, a VPS, etc.) — just run the same
   trusted management VLAN; for anything internet-facing, use SNMPv3
   (`net-snmp` supports it) or tunnel over a VPN. This starter only wires
   up v1/v2c for simplicity.
-- Status is in-memory only (resets on server restart). Swap `store.js` for
-  SQLite/Postgres if you want history, alerting, or uptime graphs.
+- Live status is in-memory only (resets on server restart); the status-change
+  history used by Reports is a flat JSON file (`server/data/events.json`),
+  durable across restarts but reset on a fresh deploy. Swap it for
+  SQLite/Postgres if you need real durability or alerting.
 - No auth on the API/UI — add something (reverse proxy + basic auth, or a
   real auth layer) before exposing this beyond localhost/LAN.
 - Ping requires the host running the server to be able to shell out to the
