@@ -996,6 +996,11 @@ body {
   color: var(--text-faint);
 }
 
+/* Mobile bottom tab bar — hidden on desktop, shown under the 768px query */
+.mobile-tabbar {
+  display: none;
+}
+
 /* Mobile / narrow viewports */
 @media (max-width: 768px) {
   .app-header {
@@ -1020,14 +1025,17 @@ body {
     padding: 8px 12px;
   }
 
+  /* Map / Sites / Events become full-screen tabs instead of a cramped
+     side-by-side (or stacked) layout. Only the active tab's panel shows;
+     .app's data-mobile-tab attribute (set from React state) drives it. */
   .app-body {
     flex-direction: column;
-    overflow-y: auto;
+    overflow: hidden;
+    padding-bottom: 58px; /* room for the fixed tab bar */
   }
   .map-container {
-    flex: none;
-    height: 45vh;
-    min-height: 240px;
+    flex: 1;
+    height: auto;
   }
   .sidebar {
     flex: 1;
@@ -1035,15 +1043,83 @@ body {
     min-width: 0;
     max-width: none;
     border-left: none;
-    border-top: 1px solid var(--border-subtle);
+    border-top: none;
+    height: 100%;
   }
 
-  .activity-log {
-    left: 60px;
-    right: 8px;
+  .app[data-mobile-tab="map"] .app-body .sidebar {
+    display: none;
+  }
+  .app[data-mobile-tab="sites"] .app-body .map-container,
+  .app[data-mobile-tab="events"] .app-body .map-container,
+  .app[data-mobile-tab="events"] .app-body .sidebar {
+    display: none;
+  }
+
+  /* Activity Log becomes the full-screen "Events" tab instead of a small
+     floating overlay; hidden entirely on the other two tabs. */
+  .app:not([data-mobile-tab="events"]) .activity-log {
+    display: none;
+  }
+  .app[data-mobile-tab="events"] .activity-log {
+    position: fixed;
+    top: 100px;
+    left: 0;
+    right: 0;
+    bottom: 58px;
     width: auto;
-    top: 120px;
-    max-height: 28vh;
+    max-height: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 58px;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    z-index: 950;
+  }
+  .mobile-tabbar button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mobile-tabbar button.active {
+    color: var(--accent);
+  }
+  .mobile-tabbar .tab-icon {
+    position: relative;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .mobile-tabbar .tab-badge {
+    position: absolute;
+    top: -6px;
+    left: 100%;
+    margin-left: -4px;
+    background: var(--status-down);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 4px;
+    min-width: 14px;
+    text-align: center;
   }
 
   .form-row {

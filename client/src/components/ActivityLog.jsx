@@ -16,9 +16,7 @@ function Row({ n, onMarkRead }) {
 }
 
 export default function ActivityLog({ notifications, statuses, typeFilter, onMarkAllRead, onMarkRead }) {
-  // Start collapsed on small screens so it doesn't immediately cover the
-  // map before the user's had a chance to look at it.
-  const [collapsed, setCollapsed] = useState(() => window.matchMedia("(max-width: 768px)").matches);
+  const [collapsed, setCollapsed] = useState(false);
   const [mode, setMode] = useState("all"); // "all" | "unread" | "unresolved"
 
   const typed = typeFilter && typeFilter.size > 0 ? notifications.filter((n) => typeFilter.has(n.deviceType)) : notifications;

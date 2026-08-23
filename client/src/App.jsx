@@ -5,6 +5,7 @@ import AdminPanel from "./components/AdminPanel.jsx";
 import ActivityLog from "./components/ActivityLog.jsx";
 import TypeFilter from "./components/TypeFilter.jsx";
 import AboutModal from "./components/AboutModal.jsx";
+import MobileTabBar from "./components/MobileTabBar.jsx";
 import { socket } from "./socket.js";
 import * as api from "./api.js";
 import { playUpSound, playDownSound, unlockAudio } from "./sound.js";
@@ -54,6 +55,7 @@ export default function App() {
   });
 
   const [pulsingSites, setPulsingSites] = useState(() => new Set());
+  const [mobileTab, setMobileTab] = useState("map"); // "map" | "sites" | "events" — mobile only
 
   const deviceIndex = useMemo(() => {
     const idx = {};
@@ -276,6 +278,7 @@ export default function App() {
 
   const selectedSite = sitesWithStatus.find((s) => s.id === selectedSiteId) || null;
   const selectedSiteFiltered = filteredSites.find((s) => s.id === selectedSiteId) || null;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   function handleMapClick(lat, lon) {
     if (locationPicker) {
@@ -301,7 +304,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" data-mobile-tab={mobileTab}>
       <ActivityLog
         notifications={notifications}
         statuses={statuses}
@@ -394,6 +397,7 @@ export default function App() {
           />
         )}
       </div>
+      <MobileTabBar active={mobileTab} onChange={setMobileTab} unreadCount={unreadCount} />
     </div>
   );
 }
