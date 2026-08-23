@@ -68,8 +68,14 @@ export default function App() {
 
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try {
-      const stored = Number(localStorage.getItem("sidebarWidth"));
-      if (Number.isFinite(stored)) return clamp(stored, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
+      const raw = localStorage.getItem("sidebarWidth");
+      // Number(null) is 0, not NaN — an explicit null check is needed or a
+      // never-set value would silently clamp to MIN_SIDEBAR_WIDTH instead
+      // of falling through to the real default below.
+      if (raw != null) {
+        const stored = Number(raw);
+        if (Number.isFinite(stored)) return clamp(stored, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
+      }
     } catch {
       // localStorage unavailable — use default.
     }
