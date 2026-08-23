@@ -60,7 +60,7 @@ sites:
         name: Cellular Base Station
         type: cellular-bts
         method: api
-        target: https://api.github.com/zen
+        target: https://www.cloudflare.com/cdn-cgi/trace
         api:
           method: GET
           expectedStatus: 200
@@ -104,7 +104,7 @@ sites:
         name: Perimeter Sensor
         type: sensor
         method: api
-        target: https://api.github.com
+        target: https://dns.google/resolve?name=cloudflare.com
         api:
           method: GET
           expectedStatus: 200
