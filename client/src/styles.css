@@ -771,10 +771,10 @@ body {
 /* Activity log (left side, persistent) */
 .activity-log {
   position: fixed;
-  top: 148px;
+  top: 72px; /* header height (56px) + 16px, matching the 16px left margin */
   left: 16px;
   width: 320px;
-  max-height: calc(100vh - 178px);
+  max-height: calc(100vh - 102px);
   background: rgba(var(--bg-panel-rgb), 0.94);
   border: 1px solid var(--border);
   border-radius: 8px;

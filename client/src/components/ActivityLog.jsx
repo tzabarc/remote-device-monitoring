@@ -54,7 +54,7 @@ export default function ActivityLog({ notifications, statuses, typeFilter, onMar
   return (
     <div className={`activity-log${collapsed ? " collapsed" : ""}`}>
       <div className="activity-log-header" onClick={() => setCollapsed((v) => !v)}>
-        <span>Activity Log{typed.length > 0 ? ` (${typed.length})` : ""}</span>
+        <span>Event Log{typed.length > 0 ? ` (${typed.length})` : ""}</span>
         <span className="activity-log-toggle">{collapsed ? "▸" : "▾"}</span>
       </div>
       {!collapsed && (
