@@ -290,7 +290,7 @@ export default function App() {
         onMarkRead={markNotificationRead}
       />
       <header className="app-header">
-        <h1>Gaza-Border Site Monitor</h1>
+        <h1>Tzabtor - Remote devices monitoring</h1>
         <div className="app-header-right">
           <span className={`conn-pill ${connected ? "conn-up" : "conn-down"}`}>
             {connected ? "live" : "disconnected"}

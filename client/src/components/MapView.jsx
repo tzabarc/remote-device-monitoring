@@ -217,10 +217,10 @@ export default function MapView({
           {/*
             Esri's "World_Boundaries_and_Places" overlay was tried here for
             satellite place labels, but it renders local-language labels
-            (including Arabic for Gaza-side places) with no way to force
-            Hebrew via the free REST tile API. Using the same Hebrew-forced
-            Wikimedia layer as a semi-transparent overlay instead, so
-            satellite imagery still shows through underneath.
+            (including non-Hebrew scripts for some localities) with no way
+            to force Hebrew via the free REST tile API. Using the same
+            Hebrew-forced Wikimedia layer as a semi-transparent overlay
+            instead, so satellite imagery still shows through underneath.
           */}
           <LayersControl.Overlay checked name="Place labels (Hebrew)">
             <TileLayer

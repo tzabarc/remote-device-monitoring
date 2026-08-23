@@ -1,4 +1,4 @@
-# Gaza-Border Site Monitor
+# Tzabtor
 
 A small NOC-style dashboard: it monitors devices across several sites (via
 ping, SNMP, or HTTP API checks) and shows them on a map, color-coded by
@@ -19,7 +19,7 @@ status, with a live-updating device list per site.
 Requires Node.js 18+ (needs built-in `fetch`).
 
 ```bash
-cd gaza-border-monitor
+cd tzabtor
 npm install          # installs both workspaces (server + client)
 npm run dev           # runs server on :4000 and client on :5173
 ```
@@ -70,8 +70,8 @@ list of `devices`. Each device needs:
 
 The shipped config uses:
 - **Placeholder coordinates**: approximate public locations of a few
-  communities along the Gaza border (Sderot, Netivot, Kfar Aza, Nahal Oz,
-  Kerem Shalom) — swap in your real site list.
+  Israeli towns (Sderot, Netivot, Kfar Aza, Nahal Oz, Kerem Shalom) —
+  swap in your real site list.
 - **Placeholder targets**: the `192.0.2.0/24` documentation range (RFC
   5737), which is unroutable, so those devices will correctly show as
   "down" until you replace them with real hosts.
