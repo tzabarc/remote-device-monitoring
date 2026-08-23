@@ -35,6 +35,7 @@ export default function AdminPanel({
   canUndo,
   undoBusy,
   onUndo,
+  style,
 }) {
   const [siteForm, setSiteForm] = useState(null);
   const [deviceForm, setDeviceForm] = useState(null);
@@ -129,7 +130,7 @@ export default function AdminPanel({
   }
 
   return (
-    <aside className="sidebar admin-panel">
+    <aside className="sidebar admin-panel" style={style}>
       <div className="admin-header">
         <h2>Manage inventory</h2>
         <div className="admin-header-actions">

@@ -25,9 +25,10 @@ export default function Sidebar({
   typeFilter,
   onToggleType,
   onClearTypeFilter,
+  style,
 }) {
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" style={style}>
       <TypeFilter types={deviceTypes} selected={typeFilter} onToggle={onToggleType} onClear={onClearTypeFilter} />
 
       <section className="site-list">

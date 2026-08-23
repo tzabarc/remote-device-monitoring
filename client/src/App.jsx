@@ -13,6 +13,13 @@ import { playUpSound, playDownSound, unlockAudio } from "./sound.js";
 import { displayMethod } from "./format.js";
 
 const PULSE_DURATION_MS = 8000;
+const DEFAULT_SIDEBAR_WIDTH = 400;
+const MIN_SIDEBAR_WIDTH = 260;
+const MAX_SIDEBAR_WIDTH = 640;
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
 function deviceStatus(statuses, deviceId) {
   return statuses[deviceId]?.status || "unknown";
@@ -58,6 +65,54 @@ export default function App() {
 
   const [pulsingSites, setPulsingSites] = useState(() => new Set());
   const [mobileTab, setMobileTab] = useState("map"); // "map" | "sites" | "events" — mobile only
+
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const stored = Number(localStorage.getItem("sidebarWidth"));
+      if (Number.isFinite(stored)) return clamp(stored, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
+    } catch {
+      // localStorage unavailable — use default.
+    }
+    return DEFAULT_SIDEBAR_WIDTH;
+  });
+  const sidebarWidthRef = useRef(sidebarWidth);
+  const resizingRef = useRef(false);
+
+  const startSidebarResize = useCallback((e) => {
+    e.preventDefault();
+    resizingRef.current = true;
+    document.body.classList.add("resizing-sidebar");
+  }, []);
+
+  useEffect(() => {
+    function onMove(e) {
+      if (!resizingRef.current) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const next = clamp(window.innerWidth - clientX, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH);
+      sidebarWidthRef.current = next;
+      setSidebarWidth(next);
+    }
+    function onUp() {
+      if (!resizingRef.current) return;
+      resizingRef.current = false;
+      document.body.classList.remove("resizing-sidebar");
+      try {
+        localStorage.setItem("sidebarWidth", String(sidebarWidthRef.current));
+      } catch {
+        // localStorage unavailable — resize still works this session.
+      }
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove);
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, []);
 
   const deviceIndex = useMemo(() => {
     const idx = {};
@@ -418,8 +473,17 @@ export default function App() {
           adminOpen={adminOpen}
           pulsingSites={pulsingSites}
         />
+        <div
+          className="resize-handle"
+          onMouseDown={startSidebarResize}
+          onTouchStart={startSidebarResize}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize sidebar"
+        />
         {adminOpen ? (
           <AdminPanel
+            style={{ "--sidebar-width": `${sidebarWidth}px` }}
             sites={sitesWithStatus}
             selectedSite={selectedSite}
             onSelectSite={setSelectedSiteId}
@@ -435,6 +499,7 @@ export default function App() {
           />
         ) : (
           <Sidebar
+            style={{ "--sidebar-width": `${sidebarWidth}px` }}
             sites={filteredSites}
             statuses={statuses}
             selectedSite={selectedSiteFiltered}
