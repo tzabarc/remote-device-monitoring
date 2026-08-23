@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
 import ActivityLog from "./components/ActivityLog.jsx";
 import TypeFilter from "./components/TypeFilter.jsx";
+import AboutModal from "./components/AboutModal.jsx";
 import { socket } from "./socket.js";
 import * as api from "./api.js";
 import { playUpSound, playDownSound, unlockAudio } from "./sound.js";
@@ -28,6 +29,7 @@ export default function App() {
   const [selectedSiteId, setSelectedSiteId] = useState(null);
   const [connected, setConnected] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [locationPicker, setLocationPicker] = useState(null); // (lat, lon) => void, or null
   const [canUndo, setCanUndo] = useState(false);
   const [undoBusy, setUndoBusy] = useState(false);
@@ -318,8 +320,12 @@ export default function App() {
           >
             {adminOpen ? "Close manage" : "Manage"}
           </button>
+          <button className="btn-about" onClick={() => setAboutOpen(true)} title="About" aria-label="About">
+            ℹ️
+          </button>
         </div>
       </header>
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
       <div className="app-body">
         <MapView
           sites={filteredSites}

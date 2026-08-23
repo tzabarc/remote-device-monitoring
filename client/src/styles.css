@@ -134,7 +134,8 @@ body {
 
 .btn-undo,
 .btn-mute,
-.btn-theme {
+.btn-theme,
+.btn-about {
   background: var(--bg-hover);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -146,7 +147,8 @@ body {
 }
 .btn-undo:hover:not(:disabled),
 .btn-mute:hover,
-.btn-theme:hover {
+.btn-theme:hover,
+.btn-about:hover {
   background: var(--border-subtle);
 }
 .btn-undo:disabled {
@@ -949,4 +951,45 @@ body {
   background: var(--accent);
   border-color: var(--accent);
   color: white;
+}
+
+/* About modal */
+.about-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.about-modal {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 40px;
+  min-width: 260px;
+  text-align: center;
+  box-shadow: 0 8px 32px var(--shadow);
+}
+.about-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+}
+.about-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.about-version {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.about-author {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-faint);
 }
