@@ -1,3 +1,5 @@
+import { recordEvent } from "./eventLog.js";
+
 // Drives status *changes* for mock devices: exactly one device flips per
 // tick, on a randomly-spaced interval, independent of the regular poll
 // cycle. The poller still checks mock devices every tick (via
@@ -8,7 +10,9 @@ function randomDelayMs(minMs, maxMs) {
 }
 
 function collectMockDevices(config) {
-  return config.sites.flatMap((site) => site.devices.filter((d) => d.method === "mock"));
+  return config.sites.flatMap((site) =>
+    site.devices.filter((d) => d.method === "mock").map((d) => ({ ...d, siteId: site.id }))
+  );
 }
 
 // Rolls a per-device target status using its upProbability, retrying with
@@ -39,6 +43,7 @@ export function createMockEventScheduler({ getConfig, store, onUpdate, minMs = 4
 
     const { device, target } = pickChangeEvent(devices, store);
     const now = new Date().toISOString();
+    const previousStatus = store.getStatus(device.id)?.status;
 
     store.setStatus(device.id, {
       status: target,
@@ -47,6 +52,10 @@ export function createMockEventScheduler({ getConfig, store, onUpdate, minMs = 4
       changedAt: now,
       checkedAt: now,
     });
+
+    if ((previousStatus === "up" || previousStatus === "down") && previousStatus !== target) {
+      recordEvent({ deviceId: device.id, siteId: device.siteId, from: previousStatus, to: target, at: now });
+    }
 
     onUpdate?.(store.getAll());
   }

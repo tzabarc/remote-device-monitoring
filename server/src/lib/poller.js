@@ -2,6 +2,7 @@ import { checkPing } from "./checks/ping.js";
 import { checkSnmp } from "./checks/snmp.js";
 import { checkApi } from "./checks/api.js";
 import { checkMock } from "./checks/mock.js";
+import { recordEvent } from "./eventLog.js";
 
 const checkers = { ping: checkPing, snmp: checkSnmp, api: checkApi, mock: checkMock };
 
@@ -33,16 +34,23 @@ export function createPoller({ getConfig, store, intervalMs, onUpdate }) {
             return;
           }
 
+          const previous = store.getStatus(device.id);
+          let result;
           try {
-            const previous = store.getStatus(device.id);
-            const result = await checker(device, previous);
-            store.setStatus(device.id, { ...result, checkedAt });
+            result = await checker(device, previous);
           } catch (err) {
-            store.setStatus(device.id, {
-              status: "down",
-              latencyMs: null,
-              message: err.message,
-              checkedAt,
+            result = { status: "down", latencyMs: null, message: err.message };
+          }
+          store.setStatus(device.id, { ...result, checkedAt });
+
+          const hasRealPrevious = previous.status === "up" || previous.status === "down";
+          if (hasRealPrevious && previous.status !== result.status) {
+            recordEvent({
+              deviceId: device.id,
+              siteId: device.siteId,
+              from: previous.status,
+              to: result.status,
+              at: checkedAt,
             });
           }
         })

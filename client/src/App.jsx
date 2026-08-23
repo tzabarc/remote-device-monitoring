@@ -5,6 +5,7 @@ import AdminPanel from "./components/AdminPanel.jsx";
 import ActivityLog from "./components/ActivityLog.jsx";
 import TypeFilter from "./components/TypeFilter.jsx";
 import AboutModal from "./components/AboutModal.jsx";
+import ReportsPanel from "./components/ReportsPanel.jsx";
 import MobileTabBar from "./components/MobileTabBar.jsx";
 import { socket } from "./socket.js";
 import * as api from "./api.js";
@@ -31,6 +32,7 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [locationPicker, setLocationPicker] = useState(null); // (lat, lon) => void, or null
   const [canUndo, setCanUndo] = useState(false);
@@ -378,6 +380,9 @@ export default function App() {
           >
             {adminOpen ? "Close manage" : "Manage"}
           </button>
+          <button className="btn-reports" onClick={() => setReportsOpen(true)} title="Reports" aria-label="Reports">
+            📊
+          </button>
           <button className="btn-about" onClick={() => setAboutOpen(true)} title="About" aria-label="About">
             ℹ️
           </button>
@@ -392,6 +397,7 @@ export default function App() {
         </div>
       </header>
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
+      {reportsOpen && <ReportsPanel sites={sites} onClose={() => setReportsOpen(false)} />}
       <div className="app-body">
         <MapView
           sites={filteredSites}

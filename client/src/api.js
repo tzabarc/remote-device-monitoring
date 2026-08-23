@@ -32,3 +32,17 @@ export function deleteDevice(siteId, deviceId) {
 export function undo() {
   return apiCall("/api/undo", { method: "POST" });
 }
+
+export async function getReport({ siteIds, deviceIds, from, to }) {
+  const params = new URLSearchParams();
+  if (siteIds?.length) params.set("siteIds", siteIds.join(","));
+  if (deviceIds?.length) params.set("deviceIds", deviceIds.join(","));
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const res = await fetch(`/api/report?${params.toString()}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || `report request failed (${res.status})`);
+  }
+  return data.result;
+}

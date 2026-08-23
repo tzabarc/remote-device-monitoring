@@ -11,6 +11,7 @@ import { store } from "./store.js";
 import { createPoller } from "./lib/poller.js";
 import { createMockEventScheduler } from "./lib/mockEventScheduler.js";
 import { addSite, updateSite, deleteSite, addDevice, updateDevice, deleteDevice } from "./config/configService.js";
+import { buildReport } from "./lib/report.js";
 
 const PORT = process.env.PORT || 4000;
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || 15000);
@@ -56,6 +57,19 @@ app.get("/api/status", (req, res) => {
 app.post("/api/poll-now", async (req, res) => {
   await poller.pollOnce();
   res.json({ ok: true });
+});
+
+app.get("/api/report", (req, res) => {
+  try {
+    const siteIds = req.query.siteIds ? String(req.query.siteIds).split(",").filter(Boolean) : [];
+    const deviceIds = req.query.deviceIds ? String(req.query.deviceIds).split(",").filter(Boolean) : [];
+    const from = req.query.from ? new Date(String(req.query.from)).toISOString() : undefined;
+    const to = req.query.to ? new Date(String(req.query.to)).toISOString() : undefined;
+    const report = buildReport({ config: getConfig(), store, siteIds, deviceIds, from, to });
+    res.json({ ok: true, result: report });
+  } catch (err) {
+    res.status(400).json({ ok: false, error: err.message });
+  }
 });
 
 function persistAndBroadcast() {
