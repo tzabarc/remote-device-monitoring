@@ -995,3 +995,74 @@ body {
   font-size: 13px;
   color: var(--text-faint);
 }
+
+/* Mobile / narrow viewports */
+@media (max-width: 768px) {
+  .app-header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 10px 12px;
+  }
+  .app-header h1 {
+    font-size: 15px;
+    width: 100%;
+  }
+  .app-header-right {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .btn-undo,
+  .btn-mute,
+  .btn-theme,
+  .btn-about,
+  .btn-fullscreen,
+  .btn-manage {
+    padding: 8px 12px;
+  }
+
+  .app-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .map-container {
+    flex: none;
+    height: 45vh;
+    min-height: 240px;
+  }
+  .sidebar {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .activity-log {
+    left: 60px;
+    right: 8px;
+    width: auto;
+    top: 120px;
+    max-height: 28vh;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .about-modal {
+    max-width: calc(100vw - 32px);
+  }
+  .map-context-menu {
+    max-width: calc(100vw - 64px);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 13px;
+  }
+  .conn-pill {
+    display: none;
+  }
+}
