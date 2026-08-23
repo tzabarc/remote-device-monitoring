@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, LayersControl, Marker, Tooltip, Popup, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  LayersControl,
+  Marker,
+  Tooltip,
+  Popup,
+  ZoomControl,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import * as api from "../api.js";
 import { TYPE_ICONS } from "../format.js";
 
@@ -63,6 +73,24 @@ function SiteHoverCard({ site, statuses }) {
       </ul>
     </div>
   );
+}
+
+// react-leaflet's MapContainer is mounted once and never unmounts (only
+// its parent's CSS display/size changes, e.g. switching mobile tabs or the
+// Manage panel opening/closing) — Leaflet doesn't detect those layout
+// changes on its own, so its cached container size can go stale, causing
+// controls (attribution, zoom) to end up positioned as if the map were
+// still its previous size. A ResizeObserver on the map's own container
+// keeps Leaflet's internal size in sync with whatever CSS actually gives it.
+function MapResizeObserver() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
 }
 
 function FitBounds({ sites }) {
@@ -198,7 +226,14 @@ export default function MapView({
       {!pickingActive && adminOpen && (
         <div className="map-hint">Drag a site to relocate it, or right-click to add one</div>
       )}
-      <MapContainer center={[31.4, 34.45]} zoom={11} style={{ height: "100%", width: "100%" }}>
+      <MapContainer
+        center={[31.4, 34.45]}
+        zoom={11}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+      >
+        <ZoomControl position="bottomright" />
+        <MapResizeObserver />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Satellite">
             <TileLayer

@@ -275,6 +275,14 @@ body {
   cursor: grabbing;
 }
 
+/* Smaller zoom control, moved to bottom-right (see MapView.jsx) */
+.leaflet-control-zoom a {
+  width: 24px;
+  height: 24px;
+  line-height: 22px;
+  font-size: 14px;
+}
+
 /* Permanent site-name label */
 .site-label {
   background: rgba(var(--bg-panel-rgb), 0.88) !important;
@@ -1503,6 +1511,22 @@ body {
   .map-container {
     flex: 1;
     height: auto;
+  }
+  /* Zoom is redundant with touch pinch-to-zoom and was cramped this
+     close to the fixed tab bar — drop it entirely on mobile. */
+  .leaflet-control-zoom {
+    display: none;
+  }
+  /* Leaflet positions its own controls inside the map's absolute-positioned
+     pane, so the attribution line sits right at the map's bottom edge —
+     right where the fixed tab bar begins. Pull it up above the tab bar and
+     shrink it so it doesn't visually run into the tab buttons. */
+  .leaflet-bottom {
+    bottom: 66px;
+  }
+  .leaflet-control-attribution {
+    font-size: 9px;
+    max-width: calc(100vw - 16px);
   }
   .sidebar {
     flex: 1;
