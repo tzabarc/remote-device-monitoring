@@ -250,19 +250,19 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid;
+  border: 4px solid;
   transform: translate(-50%, -50%) scale(1);
-  opacity: 0.8;
+  opacity: 0.9;
   pointer-events: none;
-  animation: site-pulse 1s ease-out 3;
+  animation: site-pulse 1s ease-out 5;
 }
 @keyframes site-pulse {
   from {
     transform: translate(-50%, -50%) scale(1);
-    opacity: 0.8;
+    opacity: 0.9;
   }
   to {
-    transform: translate(-50%, -50%) scale(3.2);
+    transform: translate(-50%, -50%) scale(6);
     opacity: 0;
   }
 }
