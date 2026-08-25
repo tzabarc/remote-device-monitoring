@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as api from "../api.js";
 import { TYPE_ICONS } from "../format.js";
 import { t, localizedName } from "../i18n.js";
@@ -38,10 +38,35 @@ export default function AdminPanel({
   onUndo,
   style,
   lang,
+  settings,
+  onUpdateSettings,
 }) {
   const [siteForm, setSiteForm] = useState(null);
   const [deviceForm, setDeviceForm] = useState(null);
   const [error, setError] = useState("");
+  const [failThresholdInput, setFailThresholdInput] = useState("");
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  useEffect(() => {
+    if (settings) setFailThresholdInput(String(settings.failThreshold));
+  }, [settings]);
+
+  async function submitSettings(e) {
+    e.preventDefault();
+    setError("");
+    setSettingsSaving(true);
+    setSettingsSaved(false);
+    try {
+      await onUpdateSettings({ failThreshold: failThresholdInput });
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSettingsSaving(false);
+    }
+  }
 
   function startAddSite() {
     setSiteForm({ ...EMPTY_SITE_FORM, name: { en: "", he: "" } });
@@ -148,6 +173,35 @@ export default function AdminPanel({
       </div>
 
       {error && <div className="admin-error">{error}</div>}
+
+      <section>
+        <div className="admin-section-header">
+          <h3>{t(lang, "globalSettings")}</h3>
+        </div>
+        <form className="admin-form admin-settings-form" onSubmit={submitSettings}>
+          <label>
+            {t(lang, "defaultFailThreshold")}
+            <input
+              type="number"
+              min="1"
+              value={failThresholdInput}
+              onChange={(e) => setFailThresholdInput(e.target.value)}
+              disabled={!settings}
+            />
+          </label>
+          <p className="admin-hint">
+            {settings?.failThresholdIsDefault
+              ? t(lang, "usingEnvDefault", { value: settings.envDefault })
+              : t(lang, "usingCustomDefault")}
+          </p>
+          <div className="form-actions">
+            <button type="submit" disabled={!settings || settingsSaving}>
+              {settingsSaving ? t(lang, "saving") : t(lang, "save")}
+            </button>
+            {settingsSaved && <span className="admin-settings-saved">{t(lang, "saved")}</span>}
+          </div>
+        </form>
+      </section>
 
       <section>
         <div className="admin-section-header">

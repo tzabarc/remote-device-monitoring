@@ -45,6 +45,7 @@ const STRINGS = {
     sites: "Sites",
     selectASite: "Select a site",
     deviceCount: (p) => `${p.count} devices`,
+    pendingCount: (p) => `${p.count} pending`,
     colDevice: "Device",
     colMethod: "Method",
     colStatus: "Status",
@@ -53,6 +54,12 @@ const STRINGS = {
     // Admin panel
     manageInventory: "Manage inventory",
     undo: "Undo",
+    globalSettings: "Global settings",
+    defaultFailThreshold: "Default fail threshold (consecutive)",
+    usingEnvDefault: (p) => `Using server default (${p.value}) — no override set`,
+    usingCustomDefault: "Custom value set",
+    saving: "Saving…",
+    saved: "Saved",
     addSite: "+ Add site",
     edit: "Edit",
     delete: "Delete",
@@ -112,6 +119,7 @@ const STRINGS = {
     statusLabelUp: "Up",
     statusLabelDown: "Down",
     statusLabelUnknown: "Unknown",
+    statusLabelPending: "Pending",
 
     // Mobile tabs
     tabMap: "Map",
@@ -190,6 +198,7 @@ const STRINGS = {
     sites: "אתרים",
     selectASite: "בחר אתר",
     deviceCount: (p) => `${p.count} התקנים`,
+    pendingCount: (p) => `${p.count} בהמתנה`,
     colDevice: "התקן",
     colMethod: "שיטה",
     colStatus: "סטטוס",
@@ -198,6 +207,12 @@ const STRINGS = {
     // Admin panel
     manageInventory: "ניהול מלאי",
     undo: "בטל",
+    globalSettings: "הגדרות כלליות",
+    defaultFailThreshold: "סף כשלים כללי (רצופים)",
+    usingEnvDefault: (p) => `נעשה שימוש בברירת המחדל של השרת (${p.value}) — לא הוגדר ערך מותאם`,
+    usingCustomDefault: "הוגדר ערך מותאם אישית",
+    saving: "שומר…",
+    saved: "נשמר",
     addSite: "+ הוסף אתר",
     edit: "ערוך",
     delete: "מחק",
@@ -257,6 +272,7 @@ const STRINGS = {
     statusLabelUp: "פעיל",
     statusLabelDown: "מושבת",
     statusLabelUnknown: "לא ידוע",
+    statusLabelPending: "בהמתנה",
 
     // Mobile tabs
     tabMap: "מפה",

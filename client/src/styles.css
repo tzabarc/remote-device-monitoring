@@ -27,6 +27,9 @@
   --status-down-text: #fca5a5;
   --status-down-bg: #450a0a;
   --status-unknown: #95a5a6;
+  --status-pending: #f59e0b;
+  --status-pending-text: #fcd34d;
+  --status-pending-bg: #451a03;
 
   --shadow: rgba(0, 0, 0, 0.4);
   --layers-toggle-filter: invert(1) hue-rotate(180deg);
@@ -61,6 +64,9 @@
   --status-down-text: #b91c1c;
   --status-down-bg: #fee2e2;
   --status-unknown: #64748b;
+  --status-pending: #d97706;
+  --status-pending-text: #b45309;
+  --status-pending-bg: #fef3c7;
 
   --shadow: rgba(15, 23, 42, 0.12);
   --layers-toggle-filter: none;
@@ -275,6 +281,9 @@ body.resizing-sidebar {
 .site-marker-dot.selected {
   border: 3px solid #ffffff;
 }
+.site-marker-dot.pending {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45), 0 0 0 4px var(--status-pending);
+}
 .site-marker-pulse {
   position: absolute;
   top: 50%;
@@ -384,6 +393,12 @@ body.resizing-sidebar {
 }
 .site-hover-device-dot.status-down {
   background: var(--status-down);
+}
+.site-hover-device-dot.status-pending {
+  background: var(--status-pending);
+}
+.count-pending {
+  color: var(--status-pending-text);
 }
 .site-hover-device-name {
   overflow: hidden;
@@ -543,6 +558,10 @@ body.resizing-sidebar-height {
   color: var(--status-down-text);
   font-weight: 700;
 }
+.site-pending-count {
+  color: var(--status-pending-text);
+  font-weight: 700;
+}
 
 .device-list table {
   width: 100%;
@@ -614,6 +633,9 @@ body.resizing-sidebar-height {
 .status-unknown .dot {
   background: var(--status-unknown);
 }
+.status-pending .dot {
+  background: var(--status-pending);
+}
 .status-up {
   color: var(--status-up-text);
 }
@@ -622,6 +644,9 @@ body.resizing-sidebar-height {
 }
 .status-unknown {
   color: var(--text-secondary);
+}
+.status-pending {
+  color: var(--status-pending-text);
 }
 
 /* Admin panel */
@@ -812,8 +837,14 @@ body.resizing-sidebar-height {
 
 .form-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
+}
+.admin-settings-saved {
+  font-size: 12px;
+  color: var(--status-up-text);
+  font-weight: 600;
 }
 .form-actions button {
   flex: 1;

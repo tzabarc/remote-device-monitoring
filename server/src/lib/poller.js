@@ -11,7 +11,7 @@ function failThresholdFor(device, defaultFailThreshold) {
   return Number.isFinite(configured) && configured >= 1 ? configured : defaultFailThreshold;
 }
 
-export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent, defaultFailThreshold = 3 }) {
+export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent, envDefaultFailThreshold = 3 }) {
   let timer = null;
   let inFlight = false;
 
@@ -29,6 +29,9 @@ export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent, 
     inFlight = true;
     try {
       const config = getConfig();
+      const configuredDefault = config.settings?.failThreshold;
+      const defaultFailThreshold =
+        Number.isFinite(configuredDefault) && configuredDefault >= 1 ? configuredDefault : envDefaultFailThreshold;
       const allDevices = config.sites.flatMap((site) =>
         site.devices.map((device) => ({ ...device, siteId: site.id }))
       );
@@ -66,6 +69,7 @@ export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent, 
 
           let effectiveStatus = result.status;
           let effectiveMessage = result.message;
+          let pendingFailures = null;
 
           if (device.method !== "mock") {
             if (result.status === "down") {
@@ -75,13 +79,20 @@ export function createPoller({ getConfig, store, intervalMs, onUpdate, onEvent, 
               if (failCount < threshold) {
                 effectiveStatus = previous.status; // hold — not enough consecutive failures yet
                 effectiveMessage = `${result.message} (pending: ${failCount}/${threshold})`;
+                pendingFailures = { count: failCount, threshold };
               }
             } else {
               failureCounts.set(device.id, 0);
             }
           }
 
-          store.setStatus(device.id, { status: effectiveStatus, latencyMs: result.latencyMs, message: effectiveMessage, checkedAt });
+          store.setStatus(device.id, {
+            status: effectiveStatus,
+            latencyMs: result.latencyMs,
+            message: effectiveMessage,
+            checkedAt,
+            pendingFailures,
+          });
 
           const hasRealPrevious = previous.status === "up" || previous.status === "down";
           if (hasRealPrevious && previous.status !== effectiveStatus) {

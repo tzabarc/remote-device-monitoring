@@ -11,6 +11,7 @@ let cached = null;
 export function loadConfig() {
   const raw = fs.readFileSync(CONFIG_PATH, "utf8");
   cached = yaml.load(raw);
+  if (!cached.settings) cached.settings = {};
   return cached;
 }
 

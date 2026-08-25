@@ -16,14 +16,24 @@ function clamp(value, min, max) {
 function SiteDeviceCount({ site, statuses, lang }) {
   const total = site.devices.length;
   const downCount = site.devices.filter((d) => (statuses[d.id]?.status || "unknown") === "down").length;
+  const pendingCount = site.devices.filter((d) => !!statuses[d.id]?.pendingFailures).length;
+  const pendingSuffix = pendingCount > 0 && (
+    <span className="site-pending-count"> · {t(lang, "pendingCount", { count: pendingCount })}</span>
+  );
   if (downCount > 0) {
     return (
       <span className="device-count">
         <span className="site-down-count">{downCount}</span>/{total} {t(lang, "statusDown")}
+        {pendingSuffix}
       </span>
     );
   }
-  return <span className="device-count">{t(lang, "deviceCount", { count: total })}</span>;
+  return (
+    <span className="device-count">
+      {t(lang, "deviceCount", { count: total })}
+      {pendingSuffix}
+    </span>
+  );
 }
 
 export default function Sidebar({
@@ -110,7 +120,7 @@ export default function Sidebar({
               className={site.id === selectedSite?.id ? "active" : ""}
               onClick={() => onSelectSite(site.id)}
             >
-              <StatusDot status={site.status} hideLabel lang={lang} />
+              <StatusDot status={site.status} hideLabel lang={lang} pending={site.pending && site.status !== "down"} />
               <span className="site-name">{localizedName(site.name, lang, site.id)}</span>
               <SiteDeviceCount site={site} statuses={statuses} lang={lang} />
             </li>
@@ -151,7 +161,7 @@ export default function Sidebar({
                     </td>
                     <td>{displayMethod(device, lang)}</td>
                     <td>
-                      <StatusDot status={s.status || "unknown"} lang={lang} />
+                      <StatusDot status={s.status || "unknown"} lang={lang} pending={!!s.pendingFailures} />
                     </td>
                     <td>{s.checkedAt ? formatIsraelTime(s.checkedAt) : "—"}</td>
                   </tr>

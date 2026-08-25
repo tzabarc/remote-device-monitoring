@@ -23,25 +23,30 @@ const STATUS_COLORS = {
   unknown: "#95a5a6",
 };
 
-function siteIcon(status, selected, pulsing) {
+function siteIcon(status, selected, pulsing, pending) {
   const color = STATUS_COLORS[status] || STATUS_COLORS.unknown;
   const size = selected ? 24 : 16;
   const pulseRing = pulsing ? `<span class="site-marker-pulse" style="border-color:${color};"></span>` : "";
+  // Pending shows as a static amber halo (a device is failing checks but
+  // hasn't crossed failThreshold yet) — distinct from the transient pulse
+  // ring above, which only fires on an actual confirmed status change.
+  const pendingClass = pending && status !== "down" ? " pending" : "";
   return L.divIcon({
     className: "site-marker-icon",
     html: `<span class="site-marker-wrap">${pulseRing}<span class="site-marker-dot${
       selected ? " selected" : ""
-    }" style="background:${color};width:${size}px;height:${size}px;"></span></span>`,
+    }${pendingClass}" style="background:${color};width:${size}px;height:${size}px;"></span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
 }
 
 function countDeviceStatuses(devices, statuses) {
-  const counts = { up: 0, down: 0, unknown: 0 };
+  const counts = { up: 0, down: 0, unknown: 0, pending: 0 };
   for (const d of devices) {
     const s = statuses[d.id]?.status || "unknown";
     counts[s] = (counts[s] || 0) + 1;
+    if (statuses[d.id]?.pendingFailures) counts.pending += 1;
   }
   return counts;
 }
@@ -66,13 +71,19 @@ function SiteHoverCard({ site, statuses, lang }) {
             ● {counts.unknown} {t(lang, "statusUnknown")}
           </span>
         )}
+        {counts.pending > 0 && (
+          <span className="count-pending">
+            ● {counts.pending} {t(lang, "statusLabelPending")}
+          </span>
+        )}
       </div>
       <ul className="site-hover-device-list">
         {shown.map((d) => {
           const status = statuses[d.id]?.status || "unknown";
+          const pending = !!statuses[d.id]?.pendingFailures;
           return (
             <li key={d.id}>
-              <span className={`site-hover-device-dot status-${status}`} />
+              <span className={`site-hover-device-dot ${pending ? "status-pending" : `status-${status}`}`} />
               <span className="site-hover-device-icon">{TYPE_ICONS[d.type] || "•"}</span>
               <span className="site-hover-device-name">{localizedName(d.name, lang, d.id)}</span>
             </li>
@@ -289,7 +300,7 @@ export default function MapView({
           <Marker
             key={site.id}
             position={[site.lat, site.lon]}
-            icon={siteIcon(site.status, site.id === selectedSiteId, pulsingSites?.has(site.id))}
+            icon={siteIcon(site.status, site.id === selectedSiteId, pulsingSites?.has(site.id), site.pending)}
             draggable={!!adminOpen}
             eventHandlers={{
               click: () => onSelectSite(site.id),

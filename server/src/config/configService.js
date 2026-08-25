@@ -221,3 +221,17 @@ export function deleteDevice(config, siteId, deviceId) {
   const [removed] = site.devices.splice(idx, 1);
   return removed;
 }
+
+// Global settings apply wherever a per-device override isn't set. Persisted
+// alongside the inventory in sites.yaml (config.settings), not env vars, so
+// they're editable from the UI without a server restart or redeploy.
+export function updateSettings(config, input) {
+  const settings = { ...config.settings };
+  if (input.failThreshold !== undefined && input.failThreshold !== "") {
+    const n = Math.round(Number(input.failThreshold));
+    if (!Number.isFinite(n) || n < 1) throw validationError("failThreshold must be a number >= 1");
+    settings.failThreshold = n;
+  }
+  config.settings = settings;
+  return settings;
+}

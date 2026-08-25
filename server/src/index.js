@@ -10,7 +10,15 @@ import { getConfig, loadConfig, saveConfig, watchConfig } from "./config/configL
 import { store } from "./store.js";
 import { createPoller } from "./lib/poller.js";
 import { createMockEventScheduler } from "./lib/mockEventScheduler.js";
-import { addSite, updateSite, deleteSite, addDevice, updateDevice, deleteDevice } from "./config/configService.js";
+import {
+  addSite,
+  updateSite,
+  deleteSite,
+  addDevice,
+  updateDevice,
+  deleteDevice,
+  updateSettings,
+} from "./config/configService.js";
 import { buildReport } from "./lib/report.js";
 import { recentEvents } from "./lib/eventLog.js";
 
@@ -35,7 +43,7 @@ const poller = createPoller({
   intervalMs: POLL_INTERVAL_MS,
   onUpdate: (all) => io.emit("status:full", all),
   onEvent: (event) => io.emit("event:new", event),
-  defaultFailThreshold: DEFAULT_FAIL_THRESHOLD,
+  envDefaultFailThreshold: DEFAULT_FAIL_THRESHOLD,
 });
 
 const mockEvents = createMockEventScheduler({
@@ -57,6 +65,33 @@ app.get("/api/sites", (req, res) => {
 
 app.get("/api/status", (req, res) => {
   res.json(store.getAll());
+});
+
+function effectiveSettings() {
+  const configured = getConfig().settings?.failThreshold;
+  return {
+    failThreshold: Number.isFinite(configured) ? configured : DEFAULT_FAIL_THRESHOLD,
+    failThresholdIsDefault: !Number.isFinite(configured),
+    envDefault: DEFAULT_FAIL_THRESHOLD,
+  };
+}
+
+app.get("/api/settings", (req, res) => {
+  res.json(effectiveSettings());
+});
+
+app.put("/api/settings", (req, res) => {
+  try {
+    const before = JSON.parse(JSON.stringify(getConfig()));
+    updateSettings(getConfig(), req.body);
+    pushHistory(before);
+    persistAndBroadcast();
+    const settings = effectiveSettings();
+    io.emit("settings", settings);
+    res.json({ ok: true, result: settings });
+  } catch (err) {
+    res.status(err.status || 500).json({ ok: false, error: err.message });
+  }
 });
 
 app.post("/api/poll-now", async (req, res) => {
@@ -163,6 +198,7 @@ io.on("connection", (socket) => {
   socket.emit("status:full", store.getAll());
   socket.emit("undo:available", history.length > 0);
   socket.emit("events:recent", recentEvents(50));
+  socket.emit("settings", effectiveSettings());
 });
 
 watchConfig((config) => {

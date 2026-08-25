@@ -33,6 +33,14 @@ function siteStatus(site, statuses) {
   return "up";
 }
 
+// A device mid-anti-flapping-hold (failing checks but not yet past
+// failThreshold) still reports its old status (usually "up") — this is a
+// separate, purely visual signal so it can show a warning cue without
+// affecting the up/down/unknown counts and aggregation above.
+function sitePending(site, statuses) {
+  return site.devices.some((d) => !!statuses[d.id]?.pendingFailures);
+}
+
 export default function App() {
   const [sites, setSites] = useState([]);
   const [statuses, setStatuses] = useState({});
@@ -45,6 +53,7 @@ export default function App() {
   const [locationPicker, setLocationPicker] = useState(null); // (lat, lon) => void, or null
   const [canUndo, setCanUndo] = useState(false);
   const [undoBusy, setUndoBusy] = useState(false);
+  const [settings, setSettings] = useState(null); // { failThreshold, failThresholdIsDefault, envDefault } | null until loaded
   const [notifications, setNotifications] = useState([]);
   const [typeFilter, setTypeFilter] = useState(() => new Set());
   const [muted, setMuted] = useState(() => {
@@ -267,6 +276,7 @@ export default function App() {
   useEffect(() => {
     fetch("/api/sites").then((r) => r.json()).then(setSites);
     fetch("/api/status").then((r) => r.json()).then(setStatuses);
+    api.getSettings().then(setSettings).catch(() => {});
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
@@ -307,6 +317,7 @@ export default function App() {
     socket.on("undo:available", setCanUndo);
     socket.on("events:recent", onEventsRecent);
     socket.on("event:new", onEventNew);
+    socket.on("settings", setSettings);
 
     return () => {
       socket.off("connect", onConnect);
@@ -316,11 +327,12 @@ export default function App() {
       socket.off("undo:available", setCanUndo);
       socket.off("events:recent", onEventsRecent);
       socket.off("event:new", onEventNew);
+      socket.off("settings", setSettings);
     };
   }, []);
 
   const sitesWithStatus = useMemo(
-    () => sites.map((site) => ({ ...site, status: siteStatus(site, statuses) })),
+    () => sites.map((site) => ({ ...site, status: siteStatus(site, statuses), pending: sitePending(site, statuses) })),
     [sites, statuses]
   );
 
@@ -340,7 +352,7 @@ export default function App() {
     return sitesWithStatus
       .map((site) => {
         const devices = site.devices.filter((d) => typeFilter.has(d.type));
-        return { ...site, devices, status: siteStatus({ devices }, statuses) };
+        return { ...site, devices, status: siteStatus({ devices }, statuses), pending: sitePending({ devices }, statuses) };
       })
       .filter((site) => site.devices.length > 0);
   }, [sitesWithStatus, typeFilter, statuses]);
@@ -444,6 +456,12 @@ export default function App() {
     }
   }
 
+  async function handleUpdateSettings(payload) {
+    const result = await api.updateSettings(payload);
+    setSettings(result);
+    return result;
+  }
+
   return (
     <div className="app" data-mobile-tab={mobileTab}>
       <ActivityLog
@@ -539,6 +557,8 @@ export default function App() {
             canUndo={canUndo}
             undoBusy={undoBusy}
             onUndo={handleUndo}
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
             onClose={() => {
               setAdminOpen(false);
               setLocationPicker(null);

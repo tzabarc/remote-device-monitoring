@@ -33,6 +33,15 @@ export function undo() {
   return apiCall("/api/undo", { method: "POST" });
 }
 
+export async function getSettings() {
+  const res = await fetch("/api/settings");
+  if (!res.ok) throw new Error(`settings request failed (${res.status})`);
+  return res.json();
+}
+export function updateSettings(payload) {
+  return apiCall("/api/settings", { method: "PUT", body: payload });
+}
+
 export async function getReport({ siteIds, deviceIds, from, to }) {
   const params = new URLSearchParams();
   if (siteIds?.length) params.set("siteIds", siteIds.join(","));
