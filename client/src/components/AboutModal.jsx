@@ -3,7 +3,7 @@ import { CHANGELOG } from "../changelog.js";
 import { t } from "../i18n.js";
 
 const APP_NAME = "Tzabtor";
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 const APP_AUTHOR = "Tzabar Cohen";
 
 export default function AboutModal({ onClose, lang }) {

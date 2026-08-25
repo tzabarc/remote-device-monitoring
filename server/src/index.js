@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 4000;
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || 15000);
 const MOCK_EVENT_MIN_MS = Number(process.env.MOCK_EVENT_MIN_MS || 4000);
 const MOCK_EVENT_MAX_MS = Number(process.env.MOCK_EVENT_MAX_MS || 50000);
+const DEFAULT_FAIL_THRESHOLD = Number(process.env.FAIL_THRESHOLD || 3);
 
 loadConfig();
 
@@ -34,6 +35,7 @@ const poller = createPoller({
   intervalMs: POLL_INTERVAL_MS,
   onUpdate: (all) => io.emit("status:full", all),
   onEvent: (event) => io.emit("event:new", event),
+  defaultFailThreshold: DEFAULT_FAIL_THRESHOLD,
 });
 
 const mockEvents = createMockEventScheduler({
@@ -185,5 +187,6 @@ mockEvents.start();
 server.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
   console.log(`Polling every ${POLL_INTERVAL_MS}ms`);
+  console.log(`Default fail threshold: ${DEFAULT_FAIL_THRESHOLD} consecutive failures`);
   console.log(`Mock status-change events every ${MOCK_EVENT_MIN_MS}-${MOCK_EVENT_MAX_MS}ms`);
 });

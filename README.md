@@ -97,6 +97,14 @@ list of `devices`. Each device needs:
 one language is required, the other is optional and falls back to whichever
 is set when the UI's selected language doesn't have a value.
 
+`ping`/`snmp`/`api` devices also accept an optional `failThreshold` (e.g.
+`ping: { failThreshold: 3 }`) — the number of *consecutive* failed checks
+required before the device flips to "down", to absorb transient packet loss
+or network jitter instead of alerting on a single bad check. Omitted falls
+back to the server's `FAIL_THRESHOLD` env var (default `3`). Recovery is
+always immediate on the first successful check. Not applicable to `mock`
+devices, whose transitions are driven by the simulated event scheduler.
+
 The shipped config uses:
 - **Placeholder coordinates**: approximate public locations of a few
   Israeli towns (Sderot, Netivot, Kfar Aza, Nahal Oz, Kerem Shalom) —
@@ -150,7 +158,7 @@ WebSockets): this repo includes a `render.yaml` blueprint.
 
 No environment variables are required (`PORT` is set automatically by
 Render). Optional overrides: `POLL_INTERVAL_MS`, `MOCK_EVENT_MIN_MS`,
-`MOCK_EVENT_MAX_MS` (see `server/src/index.js`).
+`MOCK_EVENT_MAX_MS`, `FAIL_THRESHOLD` (see `server/src/index.js`).
 
 **Note**: the free Render tier spins the service down after ~15 minutes
 of inactivity and takes a few seconds to wake back up on the next

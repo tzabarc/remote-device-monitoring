@@ -2,6 +2,15 @@
 // bump for a release that's a meaningful checkpoint, not every commit.
 export const CHANGELOG = [
   {
+    version: "2.3.0",
+    date: "2026-08-26",
+    items: [
+      "Added anti-flapping: ping/SNMP/API devices only flip to \"down\" after N consecutive failed checks (configurable per device, default 3), instead of on a single dropped packet or transient blip",
+      "Recovery is always immediate on the first successful check",
+      "Fail threshold is editable per device in Manage mode alongside its timeout",
+    ],
+  },
+  {
     version: "2.2.0",
     date: "2026-08-25",
     items: [

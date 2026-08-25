@@ -6,9 +6,9 @@ import { t, localizedName } from "../i18n.js";
 const EMPTY_SITE_FORM = { id: null, name: { en: "", he: "" }, lat: "", lon: "" };
 
 const EMPTY_METHOD_DEFAULTS = {
-  ping: { timeoutMs: 3000 },
-  snmp: { community: "public", version: "2c", oid: "1.3.6.1.2.1.1.3.0", port: 161, timeoutMs: 3000 },
-  api: { method: "GET", expectedStatus: 200, jsonPath: "", expectedValue: "", timeoutMs: 5000 },
+  ping: { timeoutMs: 3000, failThreshold: "" },
+  snmp: { community: "public", version: "2c", oid: "1.3.6.1.2.1.1.3.0", port: 161, timeoutMs: 3000, failThreshold: "" },
+  api: { method: "GET", expectedStatus: 200, jsonPath: "", expectedValue: "", timeoutMs: 5000, failThreshold: "" },
   mock: { upProbability: 0.95 },
 };
 
@@ -302,14 +302,26 @@ export default function AdminPanel({
             </label>
 
             {deviceForm.method === "ping" && (
-              <label>
-                {t(lang, "timeoutMs")}
-                <input
-                  type="number"
-                  value={deviceForm.ping.timeoutMs}
-                  onChange={(e) => setDeviceForm({ ...deviceForm, ping: { ...deviceForm.ping, timeoutMs: e.target.value } })}
-                />
-              </label>
+              <div className="form-row">
+                <label>
+                  {t(lang, "timeoutMs")}
+                  <input
+                    type="number"
+                    value={deviceForm.ping.timeoutMs}
+                    onChange={(e) => setDeviceForm({ ...deviceForm, ping: { ...deviceForm.ping, timeoutMs: e.target.value } })}
+                  />
+                </label>
+                <label>
+                  {t(lang, "failThreshold")}
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder={t(lang, "failThresholdPlaceholder")}
+                    value={deviceForm.ping.failThreshold}
+                    onChange={(e) => setDeviceForm({ ...deviceForm, ping: { ...deviceForm.ping, failThreshold: e.target.value } })}
+                  />
+                </label>
+              </div>
             )}
 
             {deviceForm.method === "snmp" && (
@@ -350,6 +362,16 @@ export default function AdminPanel({
                     />
                   </label>
                 </div>
+                <label>
+                  {t(lang, "failThreshold")}
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder={t(lang, "failThresholdPlaceholder")}
+                    value={deviceForm.snmp.failThreshold}
+                    onChange={(e) => setDeviceForm({ ...deviceForm, snmp: { ...deviceForm.snmp, failThreshold: e.target.value } })}
+                  />
+                </label>
               </>
             )}
 
@@ -398,6 +420,16 @@ export default function AdminPanel({
                     />
                   </label>
                 </div>
+                <label>
+                  {t(lang, "failThreshold")}
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder={t(lang, "failThresholdPlaceholder")}
+                    value={deviceForm.api.failThreshold}
+                    onChange={(e) => setDeviceForm({ ...deviceForm, api: { ...deviceForm.api, failThreshold: e.target.value } })}
+                  />
+                </label>
               </>
             )}
 

@@ -75,11 +75,24 @@ function nameSlugBase(name) {
   return name.en || name.he || "";
 }
 
+// Consecutive failed checks required before a device flips to "down" —
+// anti-flapping for real checks (ping/snmp/api). Omitted/blank falls back
+// to the server's global default (FAIL_THRESHOLD env var). Not applicable
+// to mock, whose transitions are driven by the event scheduler, not by
+// repeated checker calls.
+function parseFailThreshold(src, cfg) {
+  if (src.failThreshold !== undefined && src.failThreshold !== "") {
+    const n = Math.round(Number(src.failThreshold));
+    if (Number.isFinite(n) && n >= 1) cfg.failThreshold = n;
+  }
+}
+
 function buildMethodConfig(method, input) {
   if (method === "ping") {
     const src = input.ping || {};
     const cfg = {};
     if (src.timeoutMs !== undefined && src.timeoutMs !== "") cfg.timeoutMs = Number(src.timeoutMs);
+    parseFailThreshold(src, cfg);
     return { ping: cfg };
   }
   if (method === "snmp") {
@@ -91,6 +104,7 @@ function buildMethodConfig(method, input) {
       port: src.port !== undefined && src.port !== "" ? Number(src.port) : 161,
     };
     if (src.timeoutMs !== undefined && src.timeoutMs !== "") cfg.timeoutMs = Number(src.timeoutMs);
+    parseFailThreshold(src, cfg);
     return { snmp: cfg };
   }
   if (method === "api") {
@@ -102,6 +116,7 @@ function buildMethodConfig(method, input) {
     if (src.jsonPath) cfg.jsonPath = src.jsonPath;
     if (src.expectedValue !== undefined && src.expectedValue !== "") cfg.expectedValue = src.expectedValue;
     if (src.timeoutMs !== undefined && src.timeoutMs !== "") cfg.timeoutMs = Number(src.timeoutMs);
+    parseFailThreshold(src, cfg);
     return { api: cfg };
   }
   if (method === "mock") {
