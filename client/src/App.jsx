@@ -11,6 +11,7 @@ import { socket } from "./socket.js";
 import * as api from "./api.js";
 import { playUpSound, playDownSound, unlockAudio } from "./sound.js";
 import { displayMethod } from "./format.js";
+import { t, localizedName } from "./i18n.js";
 
 const PULSE_DURATION_MS = 8000;
 const DEFAULT_SIDEBAR_WIDTH = 400;
@@ -61,6 +62,16 @@ export default function App() {
       // localStorage unavailable — fall through to system preference.
     }
     return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  });
+
+  const [lang, setLang] = useState(() => {
+    try {
+      const stored = localStorage.getItem("lang");
+      if (stored === "en" || stored === "he") return stored;
+    } catch {
+      // localStorage unavailable — default to English.
+    }
+    return "en";
   });
 
   const [pulsingSites, setPulsingSites] = useState(() => new Set());
@@ -129,12 +140,12 @@ export default function App() {
           siteName: site.name,
           deviceType: device.type,
           siteId: site.id,
-          method: displayMethod(device),
+          method: displayMethod(device, lang),
         };
       }
     }
     return idx;
-  }, [sites]);
+  }, [sites, lang]);
 
   const mutedRef = useRef(muted);
   useEffect(() => {
@@ -205,6 +216,30 @@ export default function App() {
         localStorage.setItem("theme", next);
       } catch {
         // localStorage unavailable (e.g. private browsing) — theme still works this session.
+      }
+      return next;
+    });
+  }
+
+  // Deliberately NOT setting dir="rtl" here: Unicode's own bidi algorithm
+  // already shapes Hebrew text correctly character-by-character regardless
+  // of container direction, but dir="rtl" on <html> also reverses every
+  // flex container's layout order app-wide (map/sidebar swap sides, the
+  // fixed-position event log panel ends up overlapping the sidebar) —
+  // mirroring the whole layout for RTL is a much bigger, separate design
+  // task than translating the UI text. lang is still updated for
+  // accessibility/spell-check/font selection.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  function toggleLang() {
+    setLang((cur) => {
+      const next = cur === "en" ? "he" : "en";
+      try {
+        localStorage.setItem("lang", next);
+      } catch {
+        // localStorage unavailable (e.g. private browsing) — language still switches this session.
       }
       return next;
     });
@@ -334,8 +369,8 @@ export default function App() {
         id: n.id,
         deviceId: n.deviceId,
         siteId: n.siteId || info.siteId,
-        deviceName: info.deviceName || n.deviceId,
-        siteName: info.siteName || "",
+        deviceName: localizedName(info.deviceName, lang, n.deviceId),
+        siteName: localizedName(info.siteName, lang),
         deviceType: info.deviceType,
         method: info.method,
         from: n.from,
@@ -344,7 +379,7 @@ export default function App() {
         read: n.read,
       };
     });
-  }, [notifications, deviceIndex]);
+  }, [notifications, deviceIndex, lang]);
 
   // A device that was already down before the event log's most-recent-50
   // window (e.g. it's been down for a long time and churn pushed its
@@ -367,8 +402,8 @@ export default function App() {
       ghosts.push({
         id: `ghost-${deviceId}`,
         deviceId,
-        deviceName: info.deviceName,
-        siteName: info.siteName,
+        deviceName: localizedName(info.deviceName, lang, deviceId),
+        siteName: localizedName(info.siteName, lang),
         deviceType: info.deviceType,
         siteId: info.siteId,
         method: info.method,
@@ -380,7 +415,7 @@ export default function App() {
     }
     if (ghosts.length === 0) return enrichedNotifications;
     return [...enrichedNotifications, ...ghosts].sort((a, b) => (a.checkedAt < b.checkedAt ? 1 : -1));
-  }, [enrichedNotifications, statuses, deviceIndex]);
+  }, [enrichedNotifications, statuses, deviceIndex, lang]);
 
   const selectedSite = sitesWithStatus.find((s) => s.id === selectedSiteId) || null;
   const selectedSiteFiltered = filteredSites.find((s) => s.id === selectedSiteId) || null;
@@ -417,40 +452,44 @@ export default function App() {
         typeFilter={typeFilter}
         onMarkAllRead={markAllNotificationsRead}
         onMarkRead={markNotificationRead}
+        lang={lang}
       />
       <header className="app-header">
-        <h1>Tzabtor - C4I NOC</h1>
+        <h1>{t(lang, "appTitle")}</h1>
         <div className="app-header-right">
           <span className={`conn-pill ${connected ? "conn-up" : "conn-down"}`}>
-            {connected ? "live" : "disconnected"}
+            {connected ? t(lang, "live") : t(lang, "disconnected")}
           </span>
           <button
             className="btn-mute"
             onClick={toggleMuted}
-            title={muted ? "Unmute status-change sounds" : "Mute status-change sounds"}
-            aria-label={muted ? "Unmute" : "Mute"}
+            title={muted ? t(lang, "unmuteTitle") : t(lang, "muteTitle")}
+            aria-label={muted ? t(lang, "unmute") : t(lang, "mute")}
           >
             {muted ? "🔇" : "🔊"}
           </button>
           <button
             className="btn-theme"
             onClick={toggleTheme}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? t(lang, "themeToLight") : t(lang, "themeToDark")}
+            aria-label={theme === "dark" ? t(lang, "themeToLight") : t(lang, "themeToDark")}
           >
             {theme === "dark" ? "☀️" : "🌙"}
           </button>
-          <button className="btn-reports" onClick={() => setReportsOpen(true)} title="Reports" aria-label="Reports">
+          <button className="btn-lang" onClick={toggleLang} title={t(lang, "langToggleTitle")} aria-label={t(lang, "langToggleTitle")}>
+            {lang === "en" ? "HE" : "EN"}
+          </button>
+          <button className="btn-reports" onClick={() => setReportsOpen(true)} title={t(lang, "reports")} aria-label={t(lang, "reports")}>
             📊
           </button>
-          <button className="btn-about" onClick={() => setAboutOpen(true)} title="About" aria-label="About">
+          <button className="btn-about" onClick={() => setAboutOpen(true)} title={t(lang, "about")} aria-label={t(lang, "about")}>
             ℹ️
           </button>
           <button
             className="btn-fullscreen"
             onClick={toggleFullscreen}
-            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? t(lang, "exitFullscreen") : t(lang, "enterFullscreen")}
+            aria-label={isFullscreen ? t(lang, "exitFullscreen") : t(lang, "enterFullscreen")}
           >
             ⛶
           </button>
@@ -461,12 +500,12 @@ export default function App() {
               setLocationPicker(null);
             }}
           >
-            {adminOpen ? "Close manage" : "Manage"}
+            {adminOpen ? t(lang, "closeManage") : t(lang, "manage")}
           </button>
         </div>
       </header>
-      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
-      {reportsOpen && <ReportsPanel sites={sites} onClose={() => setReportsOpen(false)} />}
+      {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} lang={lang} />}
+      {reportsOpen && <ReportsPanel sites={sites} onClose={() => setReportsOpen(false)} lang={lang} />}
       <div className="app-body">
         <MapView
           sites={filteredSites}
@@ -478,6 +517,7 @@ export default function App() {
           onMapClick={handleMapClick}
           adminOpen={adminOpen}
           pulsingSites={pulsingSites}
+          lang={lang}
         />
         <div
           className="resize-handle"
@@ -495,6 +535,7 @@ export default function App() {
             onSelectSite={setSelectedSiteId}
             onSiteCreated={(id) => setSelectedSiteId(id)}
             onRequestPickLocation={requestPickLocation}
+            lang={lang}
             canUndo={canUndo}
             undoBusy={undoBusy}
             onUndo={handleUndo}
@@ -514,10 +555,11 @@ export default function App() {
             typeFilter={typeFilter}
             onToggleType={toggleTypeFilter}
             onClearTypeFilter={clearTypeFilter}
+            lang={lang}
           />
         )}
       </div>
-      <MobileTabBar active={mobileTab} onChange={setMobileTab} unreadCount={unreadCount} />
+      <MobileTabBar active={mobileTab} onChange={setMobileTab} unreadCount={unreadCount} lang={lang} />
     </div>
   );
 }

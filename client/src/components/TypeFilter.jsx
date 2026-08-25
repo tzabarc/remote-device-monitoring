@@ -1,16 +1,17 @@
 import React from "react";
-import { TYPE_LABELS, TYPE_ICONS } from "../format.js";
+import { TYPE_ICONS } from "../format.js";
+import { t, typeLabel } from "../i18n.js";
 
-export default function TypeFilter({ types, selected, onToggle, onClear }) {
+export default function TypeFilter({ types, selected, onToggle, onClear, lang }) {
   if (types.length === 0) return null;
 
   return (
     <section className="type-filter">
       <div className="type-filter-header">
-        <h2>Filter by type</h2>
+        <h2>{t(lang, "filterByType")}</h2>
         {selected.size > 0 && (
           <button className="type-filter-clear" onClick={onClear}>
-            Clear
+            {t(lang, "clear")}
           </button>
         )}
       </div>
@@ -21,7 +22,7 @@ export default function TypeFilter({ types, selected, onToggle, onClear }) {
             className={`type-chip${selected.has(type) ? " active" : ""}`}
             onClick={() => onToggle(type)}
           >
-            {TYPE_ICONS[type] || "•"} {TYPE_LABELS[type] || type}
+            {TYPE_ICONS[type] || "•"} {typeLabel(lang, type)}
           </button>
         ))}
       </div>

@@ -1,14 +1,4 @@
-export const METHOD_LABELS = { ping: "PING", snmp: "SNMP", api: "API" };
-
-export const TYPE_LABELS = {
-  router: "Router",
-  camera: "Camera",
-  "ptz-camera": "PTZ Camera",
-  sensor: "Sensor",
-  power: "Power",
-  roip: "ROIP",
-  "cellular-bts": "Cellular BTS",
-};
+import { methodLabelFor } from "./i18n.js";
 
 export const TYPE_ICONS = {
   router: "🌐",
@@ -34,9 +24,9 @@ const TYPE_DEFAULT_METHOD = {
   "cellular-bts": "snmp",
 };
 
-export function displayMethod(device) {
+export function displayMethod(device, lang) {
   const method = device.method === "mock" ? TYPE_DEFAULT_METHOD[device.type] || "ping" : device.method;
-  return METHOD_LABELS[method] || method.toUpperCase();
+  return methodLabelFor(lang, method);
 }
 
 export function formatIsraelTime(iso) {

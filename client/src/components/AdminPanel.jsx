@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import * as api from "../api.js";
 import { TYPE_ICONS } from "../format.js";
+import { t, localizedName } from "../i18n.js";
 
-const EMPTY_SITE_FORM = { id: null, name: "", lat: "", lon: "" };
+const EMPTY_SITE_FORM = { id: null, name: { en: "", he: "" }, lat: "", lon: "" };
 
 const EMPTY_METHOD_DEFAULTS = {
   ping: { timeoutMs: 3000 },
@@ -14,7 +15,7 @@ const EMPTY_METHOD_DEFAULTS = {
 function emptyDeviceForm() {
   return {
     id: null,
-    name: "",
+    name: { en: "", he: "" },
     type: "router",
     method: "ping",
     target: "",
@@ -36,17 +37,18 @@ export default function AdminPanel({
   undoBusy,
   onUndo,
   style,
+  lang,
 }) {
   const [siteForm, setSiteForm] = useState(null);
   const [deviceForm, setDeviceForm] = useState(null);
   const [error, setError] = useState("");
 
   function startAddSite() {
-    setSiteForm({ ...EMPTY_SITE_FORM });
+    setSiteForm({ ...EMPTY_SITE_FORM, name: { en: "", he: "" } });
     setError("");
   }
   function startEditSite(site) {
-    setSiteForm({ id: site.id, name: site.name, lat: site.lat, lon: site.lon });
+    setSiteForm({ id: site.id, name: { en: site.name?.en || "", he: site.name?.he || "" }, lat: site.lat, lon: site.lon });
     setError("");
   }
   async function submitSite(e) {
@@ -65,7 +67,8 @@ export default function AdminPanel({
     }
   }
   async function removeSite(site) {
-    if (!confirm(`Delete site "${site.name}" and its ${site.devices.length} device(s)?`)) return;
+    const name = localizedName(site.name, lang, site.id);
+    if (!confirm(t(lang, "confirmDeleteSite", { name, count: site.devices.length }))) return;
     setError("");
     try {
       await api.deleteSite(site.id);
@@ -81,7 +84,7 @@ export default function AdminPanel({
   function startEditDevice(device) {
     setDeviceForm({
       id: device.id,
-      name: device.name,
+      name: { en: device.name?.en || "", he: device.name?.he || "" },
       type: device.type,
       method: device.method,
       target: device.target,
@@ -114,7 +117,8 @@ export default function AdminPanel({
     }
   }
   async function removeDevice(device) {
-    if (!confirm(`Delete device "${device.name}"?`)) return;
+    const name = localizedName(device.name, lang, device.id);
+    if (!confirm(t(lang, "confirmDeleteDevice", { name }))) return;
     setError("");
     try {
       await api.deleteDevice(selectedSite.id, device.id);
@@ -132,10 +136,10 @@ export default function AdminPanel({
   return (
     <aside className="sidebar admin-panel" style={style}>
       <div className="admin-header">
-        <h2>Manage inventory</h2>
+        <h2>{t(lang, "manageInventory")}</h2>
         <div className="admin-header-actions">
           <button className="btn-undo" onClick={onUndo} disabled={!canUndo || undoBusy}>
-            Undo
+            {t(lang, "undo")}
           </button>
           <button className="btn-close" onClick={onClose} aria-label="Close">
             ×
@@ -147,23 +151,23 @@ export default function AdminPanel({
 
       <section>
         <div className="admin-section-header">
-          <h3>Sites</h3>
+          <h3>{t(lang, "sites")}</h3>
           <button className="btn-small" onClick={startAddSite}>
-            + Add site
+            {t(lang, "addSite")}
           </button>
         </div>
         <ul className="admin-list">
           {sites.map((site) => (
             <li key={site.id} className={site.id === selectedSite?.id ? "active" : ""}>
               <span className="admin-list-name" onClick={() => onSelectSite(site.id)}>
-                {site.name}
+                {localizedName(site.name, lang, site.id)}
               </span>
               <span className="admin-list-meta">
-                {site.lat.toFixed(3)}, {site.lon.toFixed(3)} &middot; {site.devices.length} devices
+                {site.lat.toFixed(3)}, {site.lon.toFixed(3)} &middot; {t(lang, "deviceCount", { count: site.devices.length })}
               </span>
               <span className="admin-list-actions">
-                <button onClick={() => startEditSite(site)}>Edit</button>
-                <button onClick={() => removeSite(site)}>Delete</button>
+                <button onClick={() => startEditSite(site)}>{t(lang, "edit")}</button>
+                <button onClick={() => removeSite(site)}>{t(lang, "delete")}</button>
               </span>
             </li>
           ))}
@@ -172,12 +176,23 @@ export default function AdminPanel({
         {siteForm && (
           <form className="admin-form" onSubmit={submitSite}>
             <label>
-              Name
-              <input value={siteForm.name} onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })} required />
+              {t(lang, "nameEn")}
+              <input
+                value={siteForm.name.en}
+                onChange={(e) => setSiteForm({ ...siteForm, name: { ...siteForm.name, en: e.target.value } })}
+              />
+            </label>
+            <label>
+              {t(lang, "nameHe")}
+              <input
+                dir="rtl"
+                value={siteForm.name.he}
+                onChange={(e) => setSiteForm({ ...siteForm, name: { ...siteForm.name, he: e.target.value } })}
+              />
             </label>
             <div className="form-row">
               <label>
-                Lat
+                {t(lang, "lat")}
                 <input
                   type="number"
                   step="any"
@@ -187,7 +202,7 @@ export default function AdminPanel({
                 />
               </label>
               <label>
-                Lon
+                {t(lang, "lon")}
                 <input
                   type="number"
                   step="any"
@@ -198,12 +213,12 @@ export default function AdminPanel({
               </label>
             </div>
             <button type="button" className="btn-pick" onClick={() => pickLocationFor(setSiteForm)}>
-              Pick on map
+              {t(lang, "pickOnMap")}
             </button>
             <div className="form-actions">
-              <button type="submit">{siteForm.id ? "Save" : "Add"}</button>
+              <button type="submit">{siteForm.id ? t(lang, "save") : t(lang, "add")}</button>
               <button type="button" onClick={() => setSiteForm(null)}>
-                Cancel
+                {t(lang, "cancel")}
               </button>
             </div>
           </form>
@@ -212,44 +227,55 @@ export default function AdminPanel({
 
       <section>
         <div className="admin-section-header">
-          <h3>Devices {selectedSite ? `— ${selectedSite.name}` : ""}</h3>
+          <h3>{t(lang, "devicesForSite", { site: selectedSite ? localizedName(selectedSite.name, lang, selectedSite.id) : "" })}</h3>
           {selectedSite && (
             <button className="btn-small" onClick={startAddDevice}>
-              + Add device
+              {t(lang, "addDevice")}
             </button>
           )}
         </div>
 
-        {!selectedSite && <p className="admin-hint">Select a site above to manage its devices.</p>}
+        {!selectedSite && <p className="admin-hint">{t(lang, "selectSiteHint")}</p>}
 
         {selectedSite && (
           <ul className="admin-list">
             {selectedSite.devices.map((device) => (
               <li key={device.id}>
                 <span className="admin-list-name">
-                  {TYPE_ICONS[device.type] || "•"} {device.name}
+                  {TYPE_ICONS[device.type] || "•"} {localizedName(device.name, lang, device.id)}
                 </span>
                 <span className="admin-list-meta">
                   {device.method.toUpperCase()} &middot; {device.target}
                 </span>
                 <span className="admin-list-actions">
-                  <button onClick={() => startEditDevice(device)}>Edit</button>
-                  <button onClick={() => removeDevice(device)}>Delete</button>
+                  <button onClick={() => startEditDevice(device)}>{t(lang, "edit")}</button>
+                  <button onClick={() => removeDevice(device)}>{t(lang, "delete")}</button>
                 </span>
               </li>
             ))}
-            {selectedSite.devices.length === 0 && <li className="admin-hint">No devices yet.</li>}
+            {selectedSite.devices.length === 0 && <li className="admin-hint">{t(lang, "noDevicesYet")}</li>}
           </ul>
         )}
 
         {deviceForm && (
           <form className="admin-form" onSubmit={submitDevice}>
             <label>
-              Name
-              <input value={deviceForm.name} onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })} required />
+              {t(lang, "nameEn")}
+              <input
+                value={deviceForm.name.en}
+                onChange={(e) => setDeviceForm({ ...deviceForm, name: { ...deviceForm.name, en: e.target.value } })}
+              />
             </label>
             <label>
-              Type
+              {t(lang, "nameHe")}
+              <input
+                dir="rtl"
+                value={deviceForm.name.he}
+                onChange={(e) => setDeviceForm({ ...deviceForm, name: { ...deviceForm.name, he: e.target.value } })}
+              />
+            </label>
+            <label>
+              {t(lang, "type")}
               <input
                 value={deviceForm.type}
                 onChange={(e) => setDeviceForm({ ...deviceForm, type: e.target.value })}
@@ -257,16 +283,16 @@ export default function AdminPanel({
               />
             </label>
             <label>
-              Monitor via
+              {t(lang, "monitorVia")}
               <select value={deviceForm.method} onChange={(e) => setDeviceForm({ ...deviceForm, method: e.target.value })}>
-                <option value="ping">Ping</option>
-                <option value="snmp">SNMP</option>
-                <option value="api">API</option>
-                <option value="mock">Mock (simulated)</option>
+                <option value="ping">{t(lang, "methodPing")}</option>
+                <option value="snmp">{t(lang, "methodSnmp")}</option>
+                <option value="api">{t(lang, "methodApi")}</option>
+                <option value="mock">{t(lang, "methodMock")}</option>
               </select>
             </label>
             <label>
-              {deviceForm.method === "api" ? "URL" : deviceForm.method === "mock" ? "Reference target (label only)" : "Host / IP"}
+              {deviceForm.method === "api" ? t(lang, "targetUrl") : deviceForm.method === "mock" ? t(lang, "targetMockLabel") : t(lang, "targetHostIp")}
               <input
                 value={deviceForm.target}
                 onChange={(e) => setDeviceForm({ ...deviceForm, target: e.target.value })}
@@ -277,7 +303,7 @@ export default function AdminPanel({
 
             {deviceForm.method === "ping" && (
               <label>
-                Timeout (ms)
+                {t(lang, "timeoutMs")}
                 <input
                   type="number"
                   value={deviceForm.ping.timeoutMs}
@@ -290,14 +316,14 @@ export default function AdminPanel({
               <>
                 <div className="form-row">
                   <label>
-                    Community
+                    {t(lang, "community")}
                     <input
                       value={deviceForm.snmp.community}
                       onChange={(e) => setDeviceForm({ ...deviceForm, snmp: { ...deviceForm.snmp, community: e.target.value } })}
                     />
                   </label>
                   <label>
-                    Version
+                    {t(lang, "version")}
                     <select
                       value={deviceForm.snmp.version}
                       onChange={(e) => setDeviceForm({ ...deviceForm, snmp: { ...deviceForm.snmp, version: e.target.value } })}
@@ -309,14 +335,14 @@ export default function AdminPanel({
                 </div>
                 <div className="form-row">
                   <label>
-                    OID
+                    {t(lang, "oid")}
                     <input
                       value={deviceForm.snmp.oid}
                       onChange={(e) => setDeviceForm({ ...deviceForm, snmp: { ...deviceForm.snmp, oid: e.target.value } })}
                     />
                   </label>
                   <label>
-                    Port
+                    {t(lang, "port")}
                     <input
                       type="number"
                       value={deviceForm.snmp.port}
@@ -331,7 +357,7 @@ export default function AdminPanel({
               <>
                 <div className="form-row">
                   <label>
-                    HTTP method
+                    {t(lang, "httpMethod")}
                     <select
                       value={deviceForm.api.method}
                       onChange={(e) => setDeviceForm({ ...deviceForm, api: { ...deviceForm.api, method: e.target.value } })}
@@ -342,7 +368,7 @@ export default function AdminPanel({
                     </select>
                   </label>
                   <label>
-                    Expected status
+                    {t(lang, "expectedStatus")}
                     <input
                       type="number"
                       value={deviceForm.api.expectedStatus}
@@ -354,7 +380,7 @@ export default function AdminPanel({
                 </div>
                 <div className="form-row">
                   <label>
-                    JSON field (optional)
+                    {t(lang, "jsonFieldOptional")}
                     <input
                       value={deviceForm.api.jsonPath}
                       placeholder="e.g. status"
@@ -362,7 +388,7 @@ export default function AdminPanel({
                     />
                   </label>
                   <label>
-                    Expected value
+                    {t(lang, "expectedValue")}
                     <input
                       value={deviceForm.api.expectedValue}
                       placeholder="e.g. ok"
@@ -377,7 +403,7 @@ export default function AdminPanel({
 
             {deviceForm.method === "mock" && (
               <label>
-                Up probability (0–1)
+                {t(lang, "upProbability")}
                 <input
                   type="number"
                   step="0.01"
@@ -390,9 +416,9 @@ export default function AdminPanel({
             )}
 
             <div className="form-actions">
-              <button type="submit">{deviceForm.id ? "Save" : "Add"}</button>
+              <button type="submit">{deviceForm.id ? t(lang, "save") : t(lang, "add")}</button>
               <button type="button" onClick={() => setDeviceForm(null)}>
-                Cancel
+                {t(lang, "cancel")}
               </button>
             </div>
           </form>

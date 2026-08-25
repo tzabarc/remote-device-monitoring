@@ -135,6 +135,7 @@ body {
 .btn-undo,
 .btn-mute,
 .btn-theme,
+.btn-lang,
 .btn-reports,
 .btn-about,
 .btn-fullscreen {
@@ -150,6 +151,7 @@ body {
 .btn-undo:hover:not(:disabled),
 .btn-mute:hover,
 .btn-theme:hover,
+.btn-lang:hover,
 .btn-reports:hover,
 .btn-about:hover,
 .btn-fullscreen:hover {
@@ -1562,6 +1564,7 @@ body.resizing-sidebar-height {
   .btn-undo,
   .btn-mute,
   .btn-theme,
+  .btn-lang,
   .btn-reports,
   .btn-about,
   .btn-fullscreen,

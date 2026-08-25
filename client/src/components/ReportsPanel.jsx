@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { getReport } from "../api.js";
 import { TYPE_ICONS, formatIsraelDateTime } from "../format.js";
+import { t, localizedName } from "../i18n.js";
 
 const PRESETS = [
-  { key: "1h", label: "1h", hours: 1 },
-  { key: "6h", label: "6h", hours: 6 },
-  { key: "12h", label: "12h", hours: 12 },
-  { key: "24h", label: "24h", hours: 24 },
-  { key: "7d", label: "7d", hours: 24 * 7 },
-  { key: "30d", label: "30d", hours: 24 * 30 },
+  { key: "1h", labelKey: "preset1h", hours: 1 },
+  { key: "6h", labelKey: "preset6h", hours: 6 },
+  { key: "12h", labelKey: "preset12h", hours: 12 },
+  { key: "24h", labelKey: "preset24h", hours: 24 },
+  { key: "7d", labelKey: "preset7d", hours: 24 * 7 },
+  { key: "30d", labelKey: "preset30d", hours: 24 * 30 },
 ];
 
 function computeRange(preset, customFrom, customTo) {
@@ -53,15 +54,15 @@ function EventVolumeChart({ buckets }) {
   );
 }
 
-function DeviceTimeline({ device, rangeFrom, rangeTo }) {
+function DeviceTimeline({ device, rangeFrom, rangeTo, lang }) {
   const totalMs = new Date(rangeTo) - new Date(rangeFrom);
   return (
     <div className="report-timeline-row">
       <div className="report-timeline-info">
         <span className="report-timeline-icon">{TYPE_ICONS[device.deviceType] || "•"}</span>
         <div className="report-timeline-names">
-          <div className="report-timeline-device">{device.deviceName}</div>
-          <div className="report-timeline-site">{device.siteName}</div>
+          <div className="report-timeline-device">{localizedName(device.deviceName, lang, device.deviceId)}</div>
+          <div className="report-timeline-site">{localizedName(device.siteName, lang, device.siteId)}</div>
         </div>
       </div>
       <div className="report-timeline-bar">
@@ -84,7 +85,7 @@ function DeviceTimeline({ device, rangeFrom, rangeTo }) {
   );
 }
 
-export default function ReportsPanel({ sites, onClose }) {
+export default function ReportsPanel({ sites, onClose, lang }) {
   const [selectedSiteIds, setSelectedSiteIds] = useState(() => new Set());
   const [selectedDeviceIds, setSelectedDeviceIds] = useState(() => new Set());
   const [preset, setPreset] = useState("24h");
@@ -141,7 +142,13 @@ export default function ReportsPanel({ sites, onClose }) {
     const rows = [["Time", "Site", "Device", "From", "To"]];
     for (const e of report.events) {
       const device = report.perDevice.find((d) => d.deviceId === e.deviceId);
-      rows.push([formatIsraelDateTime(e.at), device?.siteName || e.siteId, device?.deviceName || e.deviceId, e.from, e.to]);
+      rows.push([
+        formatIsraelDateTime(e.at),
+        device ? localizedName(device.siteName, lang, e.siteId) : e.siteId,
+        device ? localizedName(device.deviceName, lang, e.deviceId) : e.deviceId,
+        e.from,
+        e.to,
+      ]);
     }
     const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -157,7 +164,7 @@ export default function ReportsPanel({ sites, onClose }) {
     <div className="reports-backdrop" onClick={onClose}>
       <div className="reports-modal" onClick={(e) => e.stopPropagation()}>
         <div className="reports-header">
-          <h2>Reports</h2>
+          <h2>{t(lang, "reports")}</h2>
           <button className="btn-close" onClick={onClose} aria-label="Close">
             ×
           </button>
@@ -166,25 +173,25 @@ export default function ReportsPanel({ sites, onClose }) {
         <div className="reports-body">
           <div className="reports-filters">
             <div className="reports-filter-group">
-              <div className="reports-filter-label">Time frame</div>
+              <div className="reports-filter-label">{t(lang, "timeFrame")}</div>
               <div className="reports-preset-row">
                 {PRESETS.map((p) => (
                   <button key={p.key} className={preset === p.key ? "active" : ""} onClick={() => setPreset(p.key)}>
-                    {p.label}
+                    {t(lang, p.labelKey)}
                   </button>
                 ))}
                 <button className={preset === "custom" ? "active" : ""} onClick={() => setPreset("custom")}>
-                  Custom
+                  {t(lang, "custom")}
                 </button>
               </div>
               {preset === "custom" && (
                 <div className="reports-custom-range">
                   <label>
-                    From
+                    {t(lang, "from")}
                     <input type="datetime-local" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
                   </label>
                   <label>
-                    To
+                    {t(lang, "to")}
                     <input type="datetime-local" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
                   </label>
                 </div>
@@ -193,7 +200,7 @@ export default function ReportsPanel({ sites, onClose }) {
 
             <div className="reports-filter-group">
               <div className="reports-filter-label">
-                Sites <span className="reports-filter-hint">(none = all)</span>
+                {t(lang, "sites")} <span className="reports-filter-hint">{t(lang, "noneEqualsAll")}</span>
               </div>
               <div className="reports-chip-row">
                 {sites.map((site) => (
@@ -202,7 +209,7 @@ export default function ReportsPanel({ sites, onClose }) {
                     className={`reports-chip${selectedSiteIds.has(site.id) ? " active" : ""}`}
                     onClick={() => toggleSite(site.id)}
                   >
-                    {site.name}
+                    {localizedName(site.name, lang, site.id)}
                   </button>
                 ))}
               </div>
@@ -210,17 +217,17 @@ export default function ReportsPanel({ sites, onClose }) {
 
             <div className="reports-filter-group">
               <div className="reports-filter-label">
-                Devices <span className="reports-filter-hint">(none = all)</span>
+                {t(lang, "cardDevices")} <span className="reports-filter-hint">{t(lang, "noneEqualsAll")}</span>
               </div>
               <div className="reports-device-list">
                 {sites.map((site) => (
                   <div key={site.id} className="reports-device-site-group">
-                    <div className="reports-device-site-name">{site.name}</div>
+                    <div className="reports-device-site-name">{localizedName(site.name, lang, site.id)}</div>
                     {site.devices.map((device) => (
                       <label key={device.id} className="reports-device-checkbox">
                         <input type="checkbox" checked={selectedDeviceIds.has(device.id)} onChange={() => toggleDevice(device.id)} />
                         <span className="reports-device-icon">{TYPE_ICONS[device.type] || "•"}</span>
-                        {device.name}
+                        {localizedName(device.name, lang, device.id)}
                       </label>
                     ))}
                   </div>
@@ -229,41 +236,41 @@ export default function ReportsPanel({ sites, onClose }) {
             </div>
 
             <button className="reports-generate-btn" onClick={generate} disabled={loading}>
-              {loading ? "Generating…" : "Generate report"}
+              {loading ? t(lang, "generating") : t(lang, "generateReport")}
             </button>
           </div>
 
           <div className="reports-results">
             {error && <div className="admin-error">{error}</div>}
-            {!report && !error && <div className="reports-empty">Generating report…</div>}
+            {!report && !error && <div className="reports-empty">{t(lang, "generatingReport")}</div>}
             {report && (
               <>
                 <div className="reports-summary-cards">
                   <div className="reports-card">
                     <div className="reports-card-value">{report.summary.deviceCount}</div>
-                    <div className="reports-card-label">Devices</div>
+                    <div className="reports-card-label">{t(lang, "cardDevices")}</div>
                   </div>
                   <div className="reports-card">
                     <div className="reports-card-value">{report.summary.siteCount}</div>
-                    <div className="reports-card-label">Sites</div>
+                    <div className="reports-card-label">{t(lang, "cardSites")}</div>
                   </div>
                   <div className="reports-card">
                     <div className="reports-card-value">{report.summary.totalEvents}</div>
-                    <div className="reports-card-label">Events</div>
+                    <div className="reports-card-label">{t(lang, "cardEvents")}</div>
                   </div>
                   <div className="reports-card">
                     <div className="reports-card-value report-pct-down">{report.summary.downEvents}</div>
-                    <div className="reports-card-label">Down events</div>
+                    <div className="reports-card-label">{t(lang, "cardDownEvents")}</div>
                   </div>
                   <div className={`reports-card reports-card-${uptimeClass(report.summary.overallUptimePct)}`}>
                     <div className="reports-card-value">{pct(report.summary.overallUptimePct)}</div>
-                    <div className="reports-card-label">Overall uptime</div>
+                    <div className="reports-card-label">{t(lang, "cardOverallUptime")}</div>
                   </div>
                 </div>
 
                 <div className="reports-section">
                   <div className="reports-section-header">
-                    <h3>Event volume</h3>
+                    <h3>{t(lang, "eventVolume")}</h3>
                     <span className="reports-range-caption">
                       {formatIsraelDateTime(report.summary.from)} → {formatIsraelDateTime(report.summary.to)}
                     </span>
@@ -271,39 +278,39 @@ export default function ReportsPanel({ sites, onClose }) {
                   <EventVolumeChart buckets={report.buckets} />
                   <div className="reports-legend">
                     <span className="reports-legend-item">
-                      <span className="reports-legend-dot report-segment-up" /> Up
+                      <span className="reports-legend-dot report-segment-up" /> {t(lang, "legendUp")}
                     </span>
                     <span className="reports-legend-item">
-                      <span className="reports-legend-dot report-segment-down" /> Down
+                      <span className="reports-legend-dot report-segment-down" /> {t(lang, "legendDown")}
                     </span>
                   </div>
                 </div>
 
                 <div className="reports-section">
-                  <h3>Device timelines</h3>
+                  <h3>{t(lang, "deviceTimelines")}</h3>
                   <div className="reports-timeline-list">
                     {report.perDevice.map((d) => (
-                      <DeviceTimeline key={d.deviceId} device={d} rangeFrom={report.summary.from} rangeTo={report.summary.to} />
+                      <DeviceTimeline key={d.deviceId} device={d} rangeFrom={report.summary.from} rangeTo={report.summary.to} lang={lang} />
                     ))}
-                    {report.perDevice.length === 0 && <div className="reports-empty">No devices match the current filters.</div>}
+                    {report.perDevice.length === 0 && <div className="reports-empty">{t(lang, "noDevicesMatchFilters")}</div>}
                   </div>
                 </div>
 
                 <div className="reports-section">
                   <div className="reports-section-header">
-                    <h3>Events ({report.events.length})</h3>
+                    <h3>{t(lang, "eventsCount", { count: report.events.length })}</h3>
                     {report.events.length > 0 && (
                       <button className="reports-export-btn" onClick={exportCsv}>
-                        Export CSV
+                        {t(lang, "exportCsv")}
                       </button>
                     )}
                   </div>
                   <div className="reports-events-table">
                     <div className="reports-events-row reports-events-head">
-                      <span>Time</span>
-                      <span>Site</span>
-                      <span>Device</span>
-                      <span>Change</span>
+                      <span>{t(lang, "colTime")}</span>
+                      <span>{t(lang, "colSite")}</span>
+                      <span>{t(lang, "colDevice")}</span>
+                      <span>{t(lang, "colChange")}</span>
                     </div>
                     {[...report.events]
                       .reverse()
@@ -313,15 +320,15 @@ export default function ReportsPanel({ sites, onClose }) {
                         return (
                           <div className="reports-events-row" key={e.id}>
                             <span>{formatIsraelDateTime(e.at)}</span>
-                            <span>{device?.siteName || e.siteId}</span>
-                            <span>{device?.deviceName || e.deviceId}</span>
+                            <span>{device ? localizedName(device.siteName, lang, e.siteId) : e.siteId}</span>
+                            <span>{device ? localizedName(device.deviceName, lang, e.deviceId) : e.deviceId}</span>
                             <span className={`reports-events-change report-pct-${e.to === "up" ? "up" : "down"}`}>
                               {e.from} → {e.to}
                             </span>
                           </div>
                         );
                       })}
-                    {report.events.length === 0 && <div className="reports-empty">No events in this range.</div>}
+                    {report.events.length === 0 && <div className="reports-empty">{t(lang, "noEventsInRange")}</div>}
                   </div>
                 </div>
               </>

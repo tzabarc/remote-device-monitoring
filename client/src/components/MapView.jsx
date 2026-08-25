@@ -13,6 +13,7 @@ import {
 } from "react-leaflet";
 import * as api from "../api.js";
 import { TYPE_ICONS } from "../format.js";
+import { t, localizedName } from "../i18n.js";
 
 const MAX_HOVER_DEVICES = 10;
 
@@ -45,18 +46,26 @@ function countDeviceStatuses(devices, statuses) {
   return counts;
 }
 
-function SiteHoverCard({ site, statuses }) {
+function SiteHoverCard({ site, statuses, lang }) {
   const counts = countDeviceStatuses(site.devices, statuses);
   const shown = site.devices.slice(0, MAX_HOVER_DEVICES);
   const hiddenCount = site.devices.length - shown.length;
 
   return (
     <div className="site-hover">
-      <div className="site-hover-title">{site.name}</div>
+      <div className="site-hover-title">{localizedName(site.name, lang, site.id)}</div>
       <div className="site-hover-counts">
-        <span className="count-up">● {counts.up} up</span>
-        <span className="count-down">● {counts.down} down</span>
-        {counts.unknown > 0 && <span className="count-unknown">● {counts.unknown} unknown</span>}
+        <span className="count-up">
+          ● {counts.up} {t(lang, "statusUp")}
+        </span>
+        <span className="count-down">
+          ● {counts.down} {t(lang, "statusDown")}
+        </span>
+        {counts.unknown > 0 && (
+          <span className="count-unknown">
+            ● {counts.unknown} {t(lang, "statusUnknown")}
+          </span>
+        )}
       </div>
       <ul className="site-hover-device-list">
         {shown.map((d) => {
@@ -65,11 +74,11 @@ function SiteHoverCard({ site, statuses }) {
             <li key={d.id}>
               <span className={`site-hover-device-dot status-${status}`} />
               <span className="site-hover-device-icon">{TYPE_ICONS[d.type] || "•"}</span>
-              <span className="site-hover-device-name">{d.name}</span>
+              <span className="site-hover-device-name">{localizedName(d.name, lang, d.id)}</span>
             </li>
           );
         })}
-        {hiddenCount > 0 && <li className="site-hover-more">+{hiddenCount} more</li>}
+        {hiddenCount > 0 && <li className="site-hover-more">{t(lang, "moreCount", { count: hiddenCount })}</li>}
       </ul>
     </div>
   );
@@ -115,7 +124,7 @@ function ClickCapture({ active, onPick }) {
 
 // Right-click on empty map (Manage mode only): add a new site here, or
 // relocate the currently selected site here.
-function ContextMenu({ selectedSite, onSiteCreated, active }) {
+function ContextMenu({ selectedSite, onSiteCreated, active, lang }) {
   const [at, setAt] = useState(null); // {lat, lon} or null
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -143,7 +152,10 @@ function ContextMenu({ selectedSite, onSiteCreated, active }) {
     setBusy(true);
     setError("");
     try {
-      const created = await api.createSite({ name: name.trim(), lat: at.lat, lon: at.lon });
+      // Quick-add from the map only captures the currently active UI
+      // language; the other language can be filled in later via the full
+      // edit form in Manage mode.
+      const created = await api.createSite({ name: { [lang]: name.trim() }, lat: at.lat, lon: at.lon });
       onSiteCreated?.(created.id);
       setAt(null);
     } catch (err) {
@@ -177,19 +189,19 @@ function ContextMenu({ selectedSite, onSiteCreated, active }) {
         <form onSubmit={handleCreate} className="map-context-add">
           <input
             autoFocus
-            placeholder="New site name"
+            placeholder={t(lang, "newSiteNamePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={busy}
           />
           <button type="submit" disabled={busy || !name.trim()}>
-            Add site here
+            {t(lang, "addSiteHere")}
           </button>
         </form>
 
         {selectedSite && (
           <button type="button" className="map-context-move" onClick={handleMove} disabled={busy}>
-            Move "{selectedSite.name}" here
+            {t(lang, "moveSiteHere", { name: localizedName(selectedSite.name, lang, selectedSite.id) })}
           </button>
         )}
       </div>
@@ -207,6 +219,7 @@ export default function MapView({
   onMapClick,
   adminOpen,
   pulsingSites,
+  lang,
 }) {
   const selectedSite = sites.find((s) => s.id === selectedSiteId) || null;
 
@@ -222,10 +235,8 @@ export default function MapView({
 
   return (
     <div className={`map-container${pickingActive ? " picking" : ""}`}>
-      {pickingActive && <div className="map-hint">Click on the map to set the location</div>}
-      {!pickingActive && adminOpen && (
-        <div className="map-hint">Drag a site to relocate it, or right-click to add one</div>
-      )}
+      {pickingActive && <div className="map-hint">{t(lang, "mapHintPick")}</div>}
+      {!pickingActive && adminOpen && <div className="map-hint">{t(lang, "mapHintManage")}</div>}
       <MapContainer
         center={[31.4, 34.45]}
         zoom={11}
@@ -235,7 +246,7 @@ export default function MapView({
         <ZoomControl position="bottomright" />
         <MapResizeObserver />
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Satellite">
+          <LayersControl.BaseLayer checked name={t(lang, "layerSatellite")}>
             <TileLayer
               attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -253,7 +264,7 @@ export default function MapView({
             so labels follow OSM's default local name — in practice Hebrew
             for these Israeli towns, since that's their primary OSM name.
           */}
-          <LayersControl.BaseLayer name="Map">
+          <LayersControl.BaseLayer name={t(lang, "layerMap")}>
             <TileLayer
               attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -261,7 +272,7 @@ export default function MapView({
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
-          <LayersControl.Overlay checked name="Place labels">
+          <LayersControl.Overlay checked name={t(lang, "layerLabels")}>
             <TileLayer
               attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
@@ -272,7 +283,7 @@ export default function MapView({
         </LayersControl>
 
         <ClickCapture active={!!pickingActive} onPick={onMapClick} />
-        <ContextMenu selectedSite={selectedSite} onSiteCreated={onSiteCreated} active={!!adminOpen} />
+        <ContextMenu selectedSite={selectedSite} onSiteCreated={onSiteCreated} active={!!adminOpen} lang={lang} />
         <FitBounds sites={sites} />
         {sites.map((site) => (
           <Marker
@@ -288,10 +299,10 @@ export default function MapView({
             }}
           >
             <Tooltip permanent direction="top" offset={[0, -10]} className="site-label" opacity={1}>
-              {site.name}
+              {localizedName(site.name, lang, site.id)}
             </Tooltip>
             <Popup className="site-hover-popup" closeButton={false} autoPan={false}>
-              <SiteHoverCard site={site} statuses={statuses} />
+              <SiteHoverCard site={site} statuses={statuses} lang={lang} />
             </Popup>
           </Marker>
         ))}

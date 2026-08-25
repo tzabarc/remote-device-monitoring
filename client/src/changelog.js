@@ -2,6 +2,19 @@
 // bump for a release that's a meaningful checkpoint, not every commit.
 export const CHANGELOG = [
   {
+    version: "2.2.0",
+    date: "2026-08-25",
+    items: [
+      "Added Hebrew support: a language toggle (EN/HE) translates the whole interface",
+      "Site and device names can now have an English and/or Hebrew value each, with automatic fallback to whichever is set",
+      "Resizable map/sidebar split and site-list/device-table split, both remembered across sessions",
+      "The event log is now server-authoritative — identical across every open tab, and a freshly opened tab immediately shows the 50 most recent events instead of starting empty",
+      "Read/unread state persists across reloads: only events since your last \"Mark all read\" show as unread",
+      'Renamed "Activity Log" to "Event Log"',
+      "Zoom control moved to bottom-right, made smaller, and hidden on mobile; fixed a mobile layout issue where the map's attribution line overlapped the tab bar",
+    ],
+  },
+  {
     version: "2.1.0",
     date: "2026-08-23",
     items: [

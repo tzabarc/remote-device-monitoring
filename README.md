@@ -23,6 +23,9 @@ instance — may take a few seconds to wake up if idle).
   undo for the last 20 changes.
 - **Dark/light theme**, **fullscreen**, and a **mobile view** with a
   Map/Sites/Events tab bar.
+- **English/Hebrew UI** — a language toggle translates the whole interface;
+  site and device names can have an English and/or Hebrew value each, with
+  the other language used as a fallback when one is left blank.
 
 ## Stack
 
@@ -89,6 +92,10 @@ list of `devices`. Each device needs:
 - `target`: hostname/IP (ping, snmp) or full URL (api)
 - an optional block matching the method (`ping:`, `snmp:`, `api:`) for
   timeouts, SNMP community/OID/version, or API expected status/JSON field.
+
+`name` (on both sites and devices) is `{ en: "...", he: "..." }` — at least
+one language is required, the other is optional and falls back to whichever
+is set when the UI's selected language doesn't have a value.
 
 The shipped config uses:
 - **Placeholder coordinates**: approximate public locations of a few

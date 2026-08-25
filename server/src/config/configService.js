@@ -61,6 +61,20 @@ function parseLon(value) {
   return lon;
 }
 
+// name is { en?, he? } — at least one language is required, the other is
+// optional (the client falls back to whichever is set when displaying).
+function normalizeName(input) {
+  const name = {};
+  if (typeof input?.en === "string" && input.en.trim()) name.en = input.en.trim();
+  if (typeof input?.he === "string" && input.he.trim()) name.he = input.he.trim();
+  if (!name.en && !name.he) throw validationError("name (English or Hebrew) is required");
+  return name;
+}
+
+function nameSlugBase(name) {
+  return name.en || name.he || "";
+}
+
 function buildMethodConfig(method, input) {
   if (method === "ping") {
     const src = input.ping || {};
@@ -102,12 +116,11 @@ function buildMethodConfig(method, input) {
 }
 
 export function addSite(config, input) {
-  const name = (input.name || "").trim();
-  if (!name) throw validationError("name is required");
+  const name = normalizeName(input.name);
   const lat = parseLat(input.lat);
   const lon = parseLon(input.lon);
 
-  const id = uniqueId(input.id ? slugify(input.id) : slugify(name), allSiteIds(config));
+  const id = uniqueId(input.id ? slugify(input.id) : slugify(nameSlugBase(name)), allSiteIds(config));
   const site = { id, name, lat, lon, devices: [] };
   config.sites.push(site);
   return site;
@@ -116,9 +129,7 @@ export function addSite(config, input) {
 export function updateSite(config, siteId, input) {
   const site = findSite(config, siteId);
   if (input.name !== undefined) {
-    const name = input.name.trim();
-    if (!name) throw validationError("name cannot be empty");
-    site.name = name;
+    site.name = normalizeName(input.name);
   }
   if (input.lat !== undefined) site.lat = parseLat(input.lat);
   if (input.lon !== undefined) site.lon = parseLon(input.lon);
@@ -134,8 +145,7 @@ export function deleteSite(config, siteId) {
 
 export function addDevice(config, siteId, input) {
   const site = findSite(config, siteId);
-  const name = (input.name || "").trim();
-  if (!name) throw validationError("name is required");
+  const name = normalizeName(input.name);
   const method = input.method;
   if (!ALLOWED_METHODS.includes(method)) {
     throw validationError(`method must be one of ${ALLOWED_METHODS.join(", ")}`);
@@ -143,7 +153,7 @@ export function addDevice(config, siteId, input) {
   const target = (input.target || "").trim();
   if (!target) throw validationError("target is required");
 
-  const id = uniqueId(input.id ? slugify(input.id) : slugify(`${siteId}-${name}`), allDeviceIds(config));
+  const id = uniqueId(input.id ? slugify(input.id) : slugify(`${siteId}-${nameSlugBase(name)}`), allDeviceIds(config));
   const device = {
     id,
     name,
@@ -161,8 +171,7 @@ export function updateDevice(config, siteId, deviceId, input) {
   const device = site.devices.find((d) => d.id === deviceId);
   if (!device) throw notFoundError(`device "${deviceId}" not found in site "${siteId}"`);
 
-  const name = input.name !== undefined ? input.name.trim() : device.name;
-  if (!name) throw validationError("name cannot be empty");
+  const name = input.name !== undefined ? normalizeName(input.name) : device.name;
 
   const type = input.type !== undefined ? input.type.trim() || "device" : device.type;
 

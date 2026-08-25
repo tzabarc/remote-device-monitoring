@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import StatusDot from "./StatusDot.jsx";
 import TypeFilter from "./TypeFilter.jsx";
 import { TYPE_ICONS, displayMethod, formatIsraelTime } from "../format.js";
+import { t, localizedName } from "../i18n.js";
 
 const DEFAULT_SITE_LIST_HEIGHT = 240;
 const MIN_SITE_LIST_HEIGHT = 80;
@@ -12,17 +13,17 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function SiteDeviceCount({ site, statuses }) {
+function SiteDeviceCount({ site, statuses, lang }) {
   const total = site.devices.length;
   const downCount = site.devices.filter((d) => (statuses[d.id]?.status || "unknown") === "down").length;
   if (downCount > 0) {
     return (
       <span className="device-count">
-        <span className="site-down-count">{downCount}</span>/{total} down
+        <span className="site-down-count">{downCount}</span>/{total} {t(lang, "statusDown")}
       </span>
     );
   }
-  return <span className="device-count">{total} devices</span>;
+  return <span className="device-count">{t(lang, "deviceCount", { count: total })}</span>;
 }
 
 export default function Sidebar({
@@ -35,6 +36,7 @@ export default function Sidebar({
   onToggleType,
   onClearTypeFilter,
   style,
+  lang,
 }) {
   const [siteListHeight, setSiteListHeight] = useState(() => {
     try {
@@ -97,10 +99,10 @@ export default function Sidebar({
 
   return (
     <aside className="sidebar" style={style} ref={asideRef}>
-      <TypeFilter types={deviceTypes} selected={typeFilter} onToggle={onToggleType} onClear={onClearTypeFilter} />
+      <TypeFilter types={deviceTypes} selected={typeFilter} onToggle={onToggleType} onClear={onClearTypeFilter} lang={lang} />
 
       <section className="site-list" style={{ height: siteListHeight }} ref={siteListRef}>
-        <h2>Sites</h2>
+        <h2>{t(lang, "sites")}</h2>
         <ul>
           {sites.map((site) => (
             <li
@@ -108,9 +110,9 @@ export default function Sidebar({
               className={site.id === selectedSite?.id ? "active" : ""}
               onClick={() => onSelectSite(site.id)}
             >
-              <StatusDot status={site.status} hideLabel />
-              <span className="site-name">{site.name}</span>
-              <SiteDeviceCount site={site} statuses={statuses} />
+              <StatusDot status={site.status} hideLabel lang={lang} />
+              <span className="site-name">{localizedName(site.name, lang, site.id)}</span>
+              <SiteDeviceCount site={site} statuses={statuses} lang={lang} />
             </li>
           ))}
         </ul>
@@ -126,15 +128,15 @@ export default function Sidebar({
       />
 
       <section className="device-list">
-        <h2>{selectedSite ? selectedSite.name : "Select a site"}</h2>
+        <h2>{selectedSite ? localizedName(selectedSite.name, lang, selectedSite.id) : t(lang, "selectASite")}</h2>
         {selectedSite && (
           <table>
             <thead>
               <tr>
-                <th>Device</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Last check</th>
+                <th>{t(lang, "colDevice")}</th>
+                <th>{t(lang, "colMethod")}</th>
+                <th>{t(lang, "colStatus")}</th>
+                <th>{t(lang, "colLastCheck")}</th>
               </tr>
             </thead>
             <tbody>
@@ -144,12 +146,12 @@ export default function Sidebar({
                   <tr key={device.id}>
                     <td>
                       <span className="device-icon">{TYPE_ICONS[device.type] || "•"}</span>
-                      {device.name}
+                      {localizedName(device.name, lang, device.id)}
                       <div className="device-target">{device.target}</div>
                     </td>
-                    <td>{displayMethod(device)}</td>
+                    <td>{displayMethod(device, lang)}</td>
                     <td>
-                      <StatusDot status={s.status || "unknown"} />
+                      <StatusDot status={s.status || "unknown"} lang={lang} />
                     </td>
                     <td>{s.checkedAt ? formatIsraelTime(s.checkedAt) : "—"}</td>
                   </tr>

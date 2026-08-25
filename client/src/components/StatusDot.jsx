@@ -1,12 +1,14 @@
 import React from "react";
+import { t } from "../i18n.js";
 
-const LABELS = { up: "Up", down: "Down", unknown: "Unknown" };
+const LABEL_KEYS = { up: "statusLabelUp", down: "statusLabelDown", unknown: "statusLabelUnknown" };
 
-export default function StatusDot({ status, hideLabel }) {
+export default function StatusDot({ status, hideLabel, lang }) {
+  const label = LABEL_KEYS[status] ? t(lang, LABEL_KEYS[status]) : status;
   return (
-    <span className={`status-dot status-${status}`} title={LABELS[status] || status}>
+    <span className={`status-dot status-${status}`} title={label}>
       <span className="dot" />
-      {!hideLabel && (LABELS[status] || status)}
+      {!hideLabel && label}
     </span>
   );
 }
